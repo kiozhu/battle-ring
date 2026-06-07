@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok Live Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* PIN Login Overlay */
+    .pin-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 20px;
+    }
+    .pin-overlay.hidden { display: none; }
+    .pin-overlay h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #25f4ee, #fe2c55);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .pin-overlay p { color: #888; font-size: 14px; }
+    .pin-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .pin-form input {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 2px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 4px;
+      width: 200px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pin-form input:focus { border-color: #25f4ee; }
+    .pin-form button {
+      padding: 14px 28px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #25f4ee, #fe2c55);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .pin-form button:hover { opacity: 0.9; }
+    .pin-error {
+      color: #fe2c55;
+      font-size: 13px;
+      min-height: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #25f4ee, #fe2c55);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header h1 { font-size: clamp(16px, 4vw, 24px); font-weight: 700; }
+    .header .room-badge {
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #ff4444;
+    }
+    .status-dot.connected { background: #00ff88; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .connect-bar {
+      padding: 12px 15px;
+      background: #111;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid #222;
+      flex-wrap: wrap;
+    }
+    .connect-bar input {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+    .connect-bar input:focus { border-color: #25f4ee; }
+    .connect-bar button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #25f4ee, #fe2c55);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .connect-bar button:hover { opacity: 0.9; }
+    .connect-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .stats-bar {
+      padding: 12px 15px;
+      background: #111;
+      display: flex;
+      gap: 15px;
+      border-bottom: 1px solid #222;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 50px;
+    }
+    .stat-value { font-size: clamp(18px, 4vw, 28px); font-weight: 700; color: #25f4ee; }
+    .stat-label { font-size: 11px; color: #888; text-transform: uppercase; }
+
+    .content { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+
+    .viewers-panel {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      min-height: 200px;
+    }
+    .viewers-panel h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #888;
+    }
+    .viewer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+    }
+    .viewer-card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      animation: slideIn 0.5s ease-out;
+      border: 1px solid #222;
+      transition: border-color 0.3s;
+    }
+    .viewer-card:hover { border-color: #25f4ee; }
+    .viewer-card.new { border-color: #fe2c55; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .viewer-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      overflow: hidden;
+      border: 3px solid #333;
+      position: relative;
+    }
+    .viewer-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .viewer-avatar .follower-badge {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      background: #fe2c55;
+      color: white;
+      font-size: 10px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .viewer-name {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .viewer-id {
+      font-size: 10px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-panel {
+      width: 100%;
+      max-height: 40vh;
+      background: #111;
+      border-top: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+    }
+    .feed-panel h2 {
+      font-size: 16px;
+      padding: 12px 15px;
+      color: #888;
+      border-bottom: 1px solid #222;
+    }
+
+    /* Desktop: side-by-side layout */
+    @media (min-width: 768px) {
+      .content { flex-direction: row; }
+      .feed-panel {
+        width: 350px;
+        max-height: none;
+        border-top: none;
+        border-left: 1px solid #222;
+      }
+      .viewer-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 12px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .feed-panel { width: 380px; }
+      .viewer-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+      }
+    }
+    .feed-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .feed-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      animation: fadeIn 0.3s;
+    }
+    .feed-item:hover { background: #1a1a1a; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .feed-item img {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .feed-item .feed-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .feed-item .feed-name { font-weight: 600; font-size: 13px; }
+    .feed-item .feed-msg { font-size: 12px; color: #aaa; word-break: break-word; }
+    .feed-item.gift { background: rgba(254, 44, 85, 0.1); }
+    .feed-item.follow { background: rgba(37, 244, 238, 0.1); }
+    .feed-item .feed-time { font-size: 10px; color: #555; flex-shrink: 0; }
+
+    .overlay-link {
+      padding: 10px 15px;
+      border-top: 1px solid #222;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .overlay-link input {
+      flex: 1;
+      min-width: 0;
+      padding: 7px 10px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #25f4ee;
+      font-size: 11px;
+      font-family: monospace;
+    }
+    .overlay-link button {
+      padding: 7px 12px;
+      background: #25f4ee;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    /* Game Tabs */
+    .game-tabs {
+      display: flex;
+      border-bottom: 1px solid #222;
+      background: #0d0d0d;
+    }
+    .game-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      text-align: center;
+    }
+    .game-tab:hover { color: #aaa; }
+    .game-tab.active { color: #fff; border-bottom-color: #25f4ee; }
+    .game-tab-content { display: none; padding: 8px 10px; }
+    .game-tab-content.active { display: block; }
+    .game-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      transition: background 0.2s;
+    }
+    .game-card:hover { background: #1a1a1a; }
+    .game-card-icon {
+      font-size: 20px;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .game-card-info { flex: 1; min-width: 0; }
+    .game-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .game-card-desc {
+      font-size: 11px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .game-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .game-card-actions button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .game-card-actions button:hover { opacity: 0.85; }
+    .game-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .game-badge.soon { background: #0ea5e9; color: #fff; }
+    .game-badge.new { background: #22c55e; color: #fff; }
+    .game-badge.live { background: #fe2c55; color: #fff; }
+
+    /* Cost bar */
+    .cost-bar {
+      padding: 6px 15px;
+      background: #0d0d0d;
+      border-top: 1px solid #222;
+      display: flex;
+      gap: 15px;
+      font-size: 11px;
+      color: #666;
+      flex-wrap: wrap;
+    }
+    .cost-bar span { color: #25f4ee; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- PIN Login Overlay -->
+  <div class="pin-overlay" id="pinOverlay">
+    <h1>TikTok Live Dashboard</h1>
+    <p>Enter your host PIN to access the dashboard</p>
+    <div class="pin-form">
+      <input type="password" id="pinInput" placeholder="PIN" maxlength="20" autocomplete="off">
+      <button onclick="submitPin()">Login</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+
+  <div class="header">
+    <h1>TikTok Live Dashboard</h1>
+    <span class="room-badge" id="roomBadge" style="display:none"></span>
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Disconnected</span>
+    </div>
+  </div>
+
+  <div class="connect-bar">
+    <span style="color:#888">@</span>
+    <input type="text" id="usernameInput" placeholder="Enter TikTok username..." value="">
+    <button id="connectBtn" onclick="connectTikTok()">Connect</button>
+    <button id="demoBtn" onclick="toggleDemo()" style="background:linear-gradient(135deg,#a855f7,#6366f1);padding:12px 24px;border-radius:8px;border:none;color:#fff;font-size:16px;font-weight:600;cursor:pointer;">Demo Mode</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-value" id="viewerCount">0</div>
+      <div class="stat-label">Viewers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="joinCount">0</div>
+      <div class="stat-label">Joined</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="chatCount">0</div>
+      <div class="stat-label">Chats</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="giftCount">0</div>
+      <div class="stat-label">Gifts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="likeCount">0</div>
+      <div class="stat-label">Likes</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="viewers-panel">
+      <h2>Viewers</h2>
+      <div class="viewer-grid" id="viewerGrid"></div>
+    </div>
+    <div class="feed-panel">
+      <h2>Live Feed</h2>
+      <div class="feed-list" id="feedList"></div>
+      <!-- Game Tabs -->
+      <div class="game-tabs">
+        <button class="game-tab active" data-tab="portrait" onclick="switchTab('portrait')">Portrait 9:16</button>
+        <button class="game-tab" data-tab="landscape" onclick="switchTab('landscape')">Landscape 16:9</button>
+        <button class="game-tab" data-tab="tools" onclick="switchTab('tools')">Tools</button>
+      </div>
+
+      <!-- Portrait Games -->
+      <div class="game-tab-content active" id="tab-portrait">
+        <div class="game-card">
+          <div class="game-card-icon">🏃</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#a855f7">Marathon 3D</div>
+            <div class="game-card-desc">Endless marathon race — portrait 9:16</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="marathonUrl">
+            <button onclick="copyUrl('marathonUrl')" style="background:#a855f7;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('marathonUrl').value,'_blank')" style="background:#a855f7;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🏔️</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#22c55e">Hill Climb 3D</div>
+            <div class="game-card-desc">Endless hill climb race — portrait 9:16</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="hillclimbUrl">
+            <button onclick="copyUrl('hillclimbUrl')" style="background:#22c55e;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('hillclimbUrl').value,'_blank')" style="background:#22c55e;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">📚</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#f59e0b">FunClass</div>
+            <div class="game-card-desc">3D classroom — earn points studying — portrait 9:16</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="funclassUrl">
+            <button onclick="copyUrl('funclassUrl')" style="background:#f59e0b;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('funclassUrl').value,'_blank')" style="background:#f59e0b;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">👊</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#ff4444">Sumo Smash <span class="game-badge soon">DEV</span></div>
+            <div class="game-card-desc">Arena battle — push opponents off — portrait 9:16</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="sumoUrl">
+            <button onclick="copyUrl('sumoUrl')" style="background:#ff4444;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('sumoUrl').value,'_blank')" style="background:#ff4444;color:#fff">Open</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Landscape Games -->
+      <div class="game-tab-content" id="tab-landscape">
+        <div class="game-card">
+          <div class="game-card-icon">🐟</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#0ea5e9">Fichy <span class="game-badge soon">DEV</span></div>
+            <div class="game-card-desc">Fish It — TikTok Live fishing — landscape 16:9</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="fichyUrl">
+            <button onclick="copyUrl('fichyUrl')" style="background:#333;color:#666;cursor:not-allowed" disabled>Copy</button>
+            <button style="background:#333;color:#666;cursor:not-allowed" disabled>Dev Only</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="game-tab-content" id="tab-tools">
+        <div class="game-card">
+          <div class="game-card-icon">🖼️</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#888">Overlay</div>
+            <div class="game-card-desc">Stream overlay — chat + gifts</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="overlayUrl">
+            <button onclick="copyUrl('overlayUrl')" style="background:#888;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('overlayUrl').value,'_blank')" style="background:#888;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🎙️</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#ec4899">Voice AI</div>
+            <div class="game-card-desc">AI voice avatar — Digital Twin</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="voiceUrl">
+            <button onclick="copyUrl('voiceUrl')" style="background:#ec4899;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('voiceUrl').value,'_blank')" style="background:#ec4899;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🔮</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#9b59b6">Fortune Teller <span class="game-badge new">NEW</span></div>
+            <div class="game-card-desc">AI fortune reader — zodiac, jodoh, ramalan</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="fortunetellerUrl">
+            <button onclick="copyUrl('fortunetellerUrl')" style="background:#9b59b6;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('fortunetellerUrl').value,'_blank')" style="background:#9b59b6;color:#fff">Open</button>
+          </div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🎮</div>
+          <div class="game-card-info">
+            <div class="game-card-name" style="color:#fe2c55">2D Game</div>
+            <div class="game-card-desc">Classic 2D TikTok game</div>
+          </div>
+          <div class="game-card-actions">
+            <input type="hidden" id="gameUrl">
+            <button onclick="copyUrl('gameUrl')" style="background:#fe2c55;color:#fff">Copy</button>
+            <button onclick="window.open(document.getElementById('gameUrl').value,'_blank')" style="background:#fe2c55;color:#fff">Open</button>
+          </div>
+        </div>
+      </div>
+      <div class="cost-bar" id="costBar" style="display:none">
+        Cost: OpenAI <span id="costOpenai">$0.00</span> | ElevenLabs <span id="costElevenlabs">$0.00</span> | Total <span id="costTotal">$0.00</span> | Calls <span id="costCalls">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ===== Multi-Host: Room & PIN =====
+    let ROOM = '';
+    let HOST_PIN = '';
+    let HOST_NAME = '';
+    let socket = null;
+
+    // Check if PIN login is needed
+    async function initDashboard() {
+      try {
+        const res = await fetch('/api/auth/check');
+        const { needsPin } = await res.json();
+        if (needsPin) {
+          document.getElementById('pinOverlay').classList.remove('hidden');
+          document.getElementById('pinInput').focus();
+          return;
+        }
+      } catch (e) {}
+
+      // No PIN needed — skip login
+      document.getElementById('pinOverlay').classList.add('hidden');
+      startDashboard('', 'Host');
+    }
+
+    async function submitPin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return;
+
+      const errorEl = document.getElementById('pinError');
+      errorEl.textContent = '';
+
+      try {
+        const res = await fetch('/api/host/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Invalid PIN';
+          return;
+        }
+
+        HOST_PIN = pin;
+        document.getElementById('pinOverlay').classList.add('hidden');
+
+        if (data.mode === 'host' && data.room) {
+          // Pre-configured host — room & username already set
+          ROOM = data.room;
+          HOST_NAME = data.hostName;
+          startDashboard(ROOM, HOST_NAME);
+        } else {
+          // Access mode — host types their own username, room created on connect
+          HOST_NAME = '';
+          ROOM = '';
+          startDashboard('', '');
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error';
+      }
+    }
+
+    // Enter key on PIN input
+    document.getElementById('pinInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitPin();
+    });
+
+    function startDashboard(room, hostName) {
+      ROOM = room;
+      HOST_NAME = hostName;
+
+      // Show room badge
+      if (room) {
+        const badge = document.getElementById('roomBadge');
+        badge.style.display = 'inline-block';
+        badge.textContent = `${hostName} (@${room})`;
+      }
+
+      // Connect socket with room
+      socket = io({ query: { room: ROOM } });
+      setupSocketEvents();
+
+      // Set URLs with room param
+      const roomParam = ROOM ? `?room=${ROOM}` : '';
+      document.getElementById('overlayUrl').value = `${window.location.origin}/overlay${roomParam}`;
+      document.getElementById('gameUrl').value = `${window.location.origin}/game${roomParam}`;
+      document.getElementById('marathonUrl').value = `${window.location.origin}/marathon${roomParam}`;
+      document.getElementById('hillclimbUrl').value = `${window.location.origin}/hillclimb${roomParam}`;
+      document.getElementById('funclassUrl').value = `${window.location.origin}/funclass${roomParam}`;
+      document.getElementById('voiceUrl').value = `${window.location.origin}/voice${roomParam}`;
+      document.getElementById('fichyUrl').value = `${window.location.origin}/fichy${roomParam}`;
+      document.getElementById('sumoUrl').value = `${window.location.origin}/sumo${roomParam}`;
+      document.getElementById('fortunetellerUrl').value = `${window.location.origin}/fortuneteller${roomParam}`;
+
+      // Load config — only pre-fill username for pre-configured hosts, not access mode
+      if (ROOM) {
+        fetch(`/api/config?room=${ROOM}`).then(r => r.json()).then(config => {
+          document.getElementById('usernameInput').value = config.username;
+        });
+      } else {
+        // Access mode — leave username empty so host can type their own
+        document.getElementById('usernameInput').value = '';
+        document.getElementById('usernameInput').focus();
+      }
+
+      // Start cost polling if room is set
+      if (ROOM) {
+        document.getElementById('costBar').style.display = 'flex';
+        setInterval(updateCost, 10000);
+        updateCost();
+      }
+    }
+
+    let stats = { viewers: 0, joined: 0, chats: 0, gifts: 0, likes: 0 };
+    const viewerMap = new Map();
+
+    function setupSocketEvents() {
+      socket.on('connection-status', (state) => {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        const btn = document.getElementById('connectBtn');
+        if (state.connected) {
+          dot.classList.add('connected');
+          text.textContent = `Connected (Room: ${state.roomId})`;
+          btn.textContent = 'Reconnect';
+          btn.disabled = false;
+        } else {
+          dot.classList.remove('connected');
+          text.textContent = state.error || 'Disconnected';
+          btn.textContent = 'Connect';
+          btn.disabled = false;
+        }
+      });
+
+      socket.on('viewer-list', (list) => {
+        list.forEach(v => addViewerCard(v));
+        stats.joined = list.length;
+        updateStats();
+      });
+
+      socket.on('viewer-join', (viewer) => {
+        addViewerCard(viewer);
+        addFeedItem('join', viewer.profilePic, viewer.nickname, 'joined the live');
+        stats.joined++;
+        updateStats();
+      });
+
+      socket.on('chat', (data) => {
+        addFeedItem('chat', data.profilePic, data.nickname, data.comment);
+        stats.chats++;
+        updateStats();
+      });
+
+      socket.on('gift', (data) => {
+        addFeedItem('gift', data.profilePic, data.nickname,
+          `sent ${data.repeatCount}x ${data.giftName} (${data.diamondCount} diamonds)`);
+        stats.gifts++;
+        updateStats();
+      });
+
+      socket.on('like', (data) => {
+        stats.likes = data.totalLikes || stats.likes + 1;
+        updateStats();
+      });
+
+      socket.on('follow', (data) => {
+        addFeedItem('follow', data.profilePic, data.nickname, 'followed you!');
+      });
+
+      socket.on('share', (data) => {
+        addFeedItem('share', data.profilePic, data.nickname, 'shared the live');
+      });
+
+      socket.on('room-stats', (data) => {
+        stats.viewers = data.viewerCount;
+        updateStats();
+      });
+    }
+
+    function connectTikTok() {
+      const username = document.getElementById('usernameInput').value.trim().replace('@', '');
+      if (!username) return;
+      document.getElementById('connectBtn').disabled = true;
+      document.getElementById('connectBtn').textContent = 'Connecting...';
+
+      // If no room yet (access mode), set room to the username they typed
+      if (!ROOM) {
+        ROOM = username;
+        HOST_NAME = username;
+        // Rejoin socket to the correct room
+        socket.disconnect();
+        socket = io({ query: { room: ROOM } });
+        setupSocketEvents();
+        // Update URLs with room param
+        const roomParam = `?room=${ROOM}`;
+        document.getElementById('overlayUrl').value = `${window.location.origin}/overlay${roomParam}`;
+        document.getElementById('gameUrl').value = `${window.location.origin}/game${roomParam}`;
+        document.getElementById('marathonUrl').value = `${window.location.origin}/marathon${roomParam}`;
+        document.getElementById('hillclimbUrl').value = `${window.location.origin}/hillclimb${roomParam}`;
+        document.getElementById('funclassUrl').value = `${window.location.origin}/funclass${roomParam}`;
+        document.getElementById('voiceUrl').value = `${window.location.origin}/voice${roomParam}`;
+        document.getElementById('fichyUrl').value = `${window.location.origin}/fichy${roomParam}`;
+        document.getElementById('sumoUrl').value = `${window.location.origin}/sumo${roomParam}`;
+        document.getElementById('fortunetellerUrl').value = `${window.location.origin}/fortuneteller${roomParam}`;
+        // Update room badge
+        const badge = document.getElementById('roomBadge');
+        badge.style.display = 'inline-block';
+        badge.textContent = `@${ROOM}`;
+      }
+
+      socket.emit('connect-tiktok', { username, pin: HOST_PIN, room: ROOM });
+    }
+
+    function proxyImg(url) {
+      if (!url) return '';
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+
+    function addViewerCard(viewer) {
+      if (viewerMap.has(viewer.id)) return;
+      viewerMap.set(viewer.id, viewer);
+
+      const grid = document.getElementById('viewerGrid');
+      const card = document.createElement('div');
+      card.className = 'viewer-card new';
+      card.id = `viewer-${viewer.id}`;
+      card.innerHTML = `
+        <div class="viewer-avatar">
+          <img src="${proxyImg(viewer.profilePic)}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2240%22>${viewer.nickname?.[0] || '?'}</text></svg>'">
+          ${viewer.isFollower ? '<div class="follower-badge">♥</div>' : ''}
+        </div>
+        <div class="viewer-name">${viewer.nickname}</div>
+        <div class="viewer-id">@${viewer.uniqueId}</div>
+      `;
+      grid.prepend(card);
+      setTimeout(() => card.classList.remove('new'), 3000);
+    }
+
+    function addFeedItem(type, profilePic, name, message) {
+      const list = document.getElementById('feedList');
+      const item = document.createElement('div');
+      item.className = `feed-item ${type}`;
+      item.innerHTML = `
+        <img src="${proxyImg(profilePic)}" alt="" onerror="this.style.display='none'">
+        <div class="feed-text">
+          <div class="feed-name">${name}</div>
+          <div class="feed-msg">${message}</div>
+        </div>
+        <div class="feed-time">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      `;
+      list.prepend(item);
+      while (list.children.length > 200) list.removeChild(list.lastChild);
+    }
+
+    function updateStats() {
+      document.getElementById('viewerCount').textContent = stats.viewers;
+      document.getElementById('joinCount').textContent = stats.joined;
+      document.getElementById('chatCount').textContent = stats.chats;
+      document.getElementById('giftCount').textContent = stats.gifts;
+      document.getElementById('likeCount').textContent = stats.likes;
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.game-tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    function copyUrl(id) {
+      const url = document.getElementById(id).value;
+      navigator.clipboard.writeText(url);
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    }
+
+    let demoActive = false;
+    function toggleDemo() {
+      demoActive = !demoActive;
+      const btn = document.getElementById('demoBtn');
+      if (demoActive) {
+        socket.emit('start-demo', { room: ROOM });
+        btn.textContent = 'Stop Demo';
+        btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        document.getElementById('viewerGrid').innerHTML = '';
+        document.getElementById('feedList').innerHTML = '';
+        viewerMap.clear();
+        stats = { viewers: 0, joined: 0, chats: 0, gifts: 0, likes: 0 };
+        updateStats();
+      } else {
+        socket.emit('stop-demo', { room: ROOM });
+        btn.textContent = 'Demo Mode';
+        btn.style.background = 'linear-gradient(135deg, #a855f7, #6366f1)';
+      }
+    }
+
+    async function updateCost() {
+      if (!ROOM) return;
+      try {
+        const res = await fetch(`/api/session/${ROOM}/cost`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('costOpenai').textContent = data.estimate.openai;
+        document.getElementById('costElevenlabs').textContent = data.estimate.elevenlabs;
+        document.getElementById('costTotal').textContent = data.estimate.total;
+        document.getElementById('costCalls').textContent = data.cost.voiceCalls;
+      } catch (e) { /* ignore */ }
+    }
+
+    // Enter key to connect
+    document.getElementById('usernameInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') connectTikTok();
+    });
+
+    // Init
+    initDashboard();
+  </script>
+</body>
+</html>
