@@ -450,14 +450,7 @@ app.use(express.static(join(__dirname, 'public'), { extensions: ['html'], etag: 
 
 // Clean URL routes
 app.get('/overlay', (req, res) => res.sendFile(join(__dirname, 'public', 'overlay.html')));
-app.get('/game', (req, res) => res.sendFile(join(__dirname, 'public', 'game.html')));
-app.get('/marathon', (req, res) => res.sendFile(join(__dirname, 'public', 'marathon3d.html')));
-app.get('/voice', (req, res) => res.sendFile(join(__dirname, 'public', 'voice.html')));
-app.get('/hillclimb', (req, res) => res.sendFile(join(__dirname, 'public', 'hillclimb.html')));
-app.get('/funclass', (req, res) => res.sendFile(join(__dirname, 'public', 'funclass.html')));
-app.get('/fichy', (req, res) => res.sendFile(join(__dirname, 'public', 'fichy.html')));
 app.get('/sumo', (req, res) => res.sendFile(join(__dirname, 'public', 'battle-ring.html')));
-app.get('/fortuneteller', (req, res) => res.sendFile(join(__dirname, 'public', 'fortuneteller.html')));
 
 // API endpoint to get current config
 app.get('/api/config', (req, res) => {
@@ -736,54 +729,6 @@ app.post('/api/chat/send', async (req, res) => {
     console.error('Chat send error:', err.message);
     res.status(500).json({ error: err.message });
   }
-});
-
-// ===== Fortune Teller Persistence API =====
-
-// POST /api/fortuneteller/viewer/load — Load persisted viewer profile
-app.post('/api/fortuneteller/viewer/load', async (req, res) => {
-  const { uniqueId } = req.body;
-  if (!uniqueId) return res.status(400).json({ error: 'uniqueId required' });
-  const result = await supabaseRest('GET', 'fortuneteller_viewers', `unique_id=eq.${encodeURIComponent(uniqueId)}&limit=1`);
-  if (!result.ok) {
-    console.error('FT viewer load error:', result.error);
-    return res.json({ viewer: null });
-  }
-  const viewer = result.data?.[0] || null;
-  res.json({ viewer });
-});
-
-// POST /api/fortuneteller/viewer/save — Batch upsert viewers
-app.post('/api/fortuneteller/viewer/save', async (req, res) => {
-  const { viewers } = req.body;
-  if (!viewers || !Array.isArray(viewers) || viewers.length === 0) {
-    return res.status(400).json({ error: 'viewers array required' });
-  }
-  const result = await supabaseRest('POST', 'fortuneteller_viewers', 'on_conflict=unique_id', viewers, {
-    'Prefer': 'resolution=merge-duplicates',
-  });
-  if (!result.ok) {
-    console.error('FT viewer save error:', result.error);
-    return res.status(500).json({ error: 'Save failed' });
-  }
-  console.log(`💾 FT saved ${viewers.length} viewer(s)`);
-  res.json({ ok: true, count: viewers.length });
-});
-
-// POST /api/fortuneteller/session/save — Save session summary
-app.post('/api/fortuneteller/session/save', async (req, res) => {
-  if (!req.body) return res.status(400).json({ error: 'empty body' });
-  const { session } = req.body;
-  if (!session) return res.status(400).json({ error: 'session required' });
-  const result = await supabaseRest('POST', 'fortuneteller_sessions', '', session, {
-    'Prefer': 'return=minimal',
-  });
-  if (!result.ok) {
-    console.error('FT session save error:', result.error);
-    return res.status(500).json({ error: 'Save failed' });
-  }
-  console.log(`💾 FT session saved (room: ${session.room || 'default'})`);
-  res.json({ ok: true });
 });
 
 // ===== TikTok Connection (scoped to session) =====
