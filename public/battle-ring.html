@@ -3776,6 +3776,7 @@ function connectSocket() {
 
 // ===== MAIN LOOP =====
 const clock = new THREE.Clock();
+let oceanFrameCounter = 0;  // Ocean update tiap 3 frame
 let leaderboardTimer = 0;
 let inactiveCheckTimer = 10;
 
@@ -3795,16 +3796,18 @@ function animate() {
   // Sky & clouds animation
   const time = Date.now() * 0.001;
   skyMat.uniforms.uTime.value = time;
-  // Animate ocean waves
-  const oceanPos = oceanGeo.attributes.position;
-  for (let i = 0; i < oceanPos.count; i++) {
-    const x = oceanVertices[i * 3];
-    const z = oceanVertices[i * 3 + 1];
-    const y = Math.sin(x * 0.05 + time * 2) * 0.5 + Math.cos(z * 0.05 + time * 1.5) * 0.3;
-    oceanPos.setZ(i, y);
+  // Animate ocean waves (tiap 3 frame untuk performa)
+  if (++oceanFrameCounter % 3 === 0) {
+    const oceanPos = oceanGeo.attributes.position;
+    for (let i = 0; i < oceanPos.count; i++) {
+      const x = oceanVertices[i * 3];
+      const z = oceanVertices[i * 3 + 1];
+      const y = Math.sin(x * 0.05 + time * 2) * 0.5 + Math.cos(z * 0.05 + time * 1.5) * 0.3;
+      oceanPos.setZ(i, y);
+    }
+    oceanPos.needsUpdate = true;
+    oceanGeo.computeVertexNormals();
   }
-  oceanPos.needsUpdate = true;
-  oceanGeo.computeVertexNormals();
 
   // Animate floating clouds
   cloudGroup.children.forEach(cloud => {
