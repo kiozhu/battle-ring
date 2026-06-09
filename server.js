@@ -879,11 +879,21 @@ function connectToTikTok(session) {
     };
   }
 
+  const MAX_VIEWERS = 500;
+
   function trackViewer(user) {
     if (!user.id) return;
     const existing = session.viewers.get(user.id);
     if (!existing) {
-      session.viewers.set(user.id, { ...user, joinedAt: Date.now() });
+      // Evict oldest viewers when over limit
+      if (session.viewers.size >= MAX_VIEWERS) {
+        const entries = [...session.viewers.entries()];
+        entries.sort((a, b) => (a[1].lastSeen || 0) - (b[1].lastSeen || 0));
+        const toRemove = entries.slice(0, Math.floor(MAX_VIEWERS / 2));
+        for (const [id] of toRemove) session.viewers.delete(id);
+        console.log(`🧹 Evicted ${toRemove.length} stale viewers (cap: ${MAX_VIEWERS})`);
+      }
+      session.viewers.set(user.id, { ...user, joinedAt: Date.now(), lastSeen: Date.now() });
     } else {
       existing.lastSeen = Date.now();
     }
