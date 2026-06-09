@@ -4123,15 +4123,15 @@ class BanterTTS {
   }
   
   startIdleTimer() {
-    // Cek setiap 10 detik apakah ada interaksi
+    // Cek setiap 2 detik apakah ada interaksi
     setInterval(() => {
-      if (!this.enabled || announcer.isBusy) return;
+      if (!this.enabled || window.announcer.isBusy) return;
       const idleTime = Date.now() - this.lastInteraction;
-      // Jika idle lebih dari 15 detik, mulai banter
-      if (idleTime > 15000) {
+      // Jika idle lebih dari 3 detik, mulai banter
+      if (idleTime > 3000) {
         this.speakBanter();
       }
-    }, 10000);
+    }, 2000);
   }
   
   speakBanter() {
