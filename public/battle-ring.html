@@ -1381,7 +1381,7 @@ function removeBots() {
 
 // Test gift function
 function testGift(tier) {
-  const alive = Array.from(players.values()).filter(p => p.alive);
+  const alive = cachedAlivePlayers;
   if (alive.length === 0) {
     addNotification('Tidak ada pemain!', '');
     return;
@@ -2151,7 +2151,7 @@ function updatePhysics(dt) {
 
   // Player-player collisions
   if (roundState === 'ACTIVE') {
-    const arr = Array.from(players.values()).filter(p => p.alive);
+    const arr = cachedAlivePlayers;
     for (let i = 0; i < arr.length; i++) {
       for (let j = i + 1; j < arr.length; j++) {
         const a = arr[i], b = arr[j];
@@ -3360,7 +3360,7 @@ let cameraAngleSpeed = 0.15; // Kecepatan rotasi kamera
 
 function findClosestFight() {
   // Find the two closest alive players — that's where the action is
-  const alive = Array.from(players.values()).filter(p => p.alive);
+  const alive = cachedAlivePlayers;
   if (alive.length < 2) return { x: 0, z: 0 };
   let minDist = Infinity, bestA = null, bestB = null;
   for (let i = 0; i < alive.length; i++) {
@@ -3472,7 +3472,7 @@ function updateCamera(dt) {
           
         case 'follow':
           // Ikut pemain terdekat
-          const alive = Array.from(players.values()).filter(p => p.alive);
+          const alive = cachedAlivePlayers;
           if (alive.length > 0) {
             const closest = alive[Math.floor(Math.random() * alive.length)];
             camDist = 5;
@@ -3517,7 +3517,7 @@ function updateCamera(dt) {
           
         case 'close_follow':
           // Ikut sangat dekat (over shoulder)
-          const closeAlive = Array.from(players.values()).filter(p => p.alive);
+          const closeAlive = cachedAlivePlayers;
           if (closeAlive.length > 0) {
             const target = closeAlive[Math.floor(Math.random() * closeAlive.length)];
             camDist = 3;
@@ -3589,7 +3589,7 @@ function updateAutoPlay(dt) {
   if (autoTimer <= 0) {
     autoTimer = 0.3 + Math.random() * 0.5;
     // Random action on random alive player (TANPA gift palsu)
-    const alive = Array.from(players.values()).filter(p => p.alive);
+    const alive = cachedAlivePlayers;
     if (alive.length === 0) return;
     const target = alive[Math.floor(Math.random() * alive.length)];
     const action = Math.random();
@@ -3622,7 +3622,7 @@ document.addEventListener('keydown', (e) => {
       })();
       break;
     case 'L': {
-      const alive = Array.from(players.values()).filter(p => p.alive);
+      const alive = cachedAlivePlayers;
       if (alive.length > 0) {
         const t = alive[Math.floor(Math.random() * alive.length)];
         handleLike({ uniqueId: t.uniqueId, nickname: t.nickname, likeCount: 3 });
@@ -3640,7 +3640,7 @@ document.addEventListener('keydown', (e) => {
       ];
       const tier = tiers[window._giftTier % tiers.length];
       window._giftTier++;
-      const alive = Array.from(players.values()).filter(p => p.alive);
+      const alive = cachedAlivePlayers;
       if (alive.length > 0) {
         const t = alive[Math.floor(Math.random() * alive.length)];
         handleGift({ uniqueId: t.uniqueId, nickname: t.nickname, diamondCount: tier.diamonds, giftName: tier.name, repeatCount: 1 });
@@ -3649,7 +3649,7 @@ document.addEventListener('keydown', (e) => {
       break;
     }
     case 'K': {
-      const alive = Array.from(players.values()).filter(p => p.alive);
+      const alive = cachedAlivePlayers;
       if (alive.length > 0) {
         const t = alive[Math.floor(Math.random() * alive.length)];
         t.vy = -5; t.onGround = false;
@@ -3777,12 +3777,17 @@ function connectSocket() {
 // ===== MAIN LOOP =====
 const clock = new THREE.Clock();
 let oceanFrameCounter = 0;  // Ocean update tiap 3 frame
+let cachedAlivePlayers = [];  // Cache alive players per frame
 let leaderboardTimer = 0;
 let inactiveCheckTimer = 10;
 
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
+
+  // Refresh alive players cache (once per frame, 0 garbage)
+  cachedAlivePlayers.length = 0;
+  players.forEach(p => { if (p.alive) cachedAlivePlayers.push(p); });
 
   updateRoundState(dt);
   updateBots(dt);
@@ -4291,7 +4296,7 @@ function showAnimButtons(p) {
 
 // Wire up action buttons
 window._debugAction = function(action) {
-  const alive = Array.from(players.values()).filter(p => p.alive);
+  const alive = cachedAlivePlayers;
   const t = alive.length > 0 ? alive[Math.floor(Math.random() * alive.length)] : null;
   switch (action) {
     case 'like':
