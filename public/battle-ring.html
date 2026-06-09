@@ -561,14 +561,8 @@ window.applyArenaTheme = function(themeName) {
     ocean.material.color.set(theme.ocean);
   }
   
-  // Update arena color — traverse GLB model
-  if (arenaMesh) {
-    arenaMesh.traverse(child => {
-      if (child.isMesh && child.material) {
-        child.material.color.set(theme.arena);
-      }
-    });
-  }
+  // Arena color TIDAK diubah — GLB model punya texture sendiri
+  // Mengubah warna akan membuat arena gelap karena texture menimpa warna
   
   addNotification(`🏔️ Arena: ${theme.name}`, 'power');
 }
