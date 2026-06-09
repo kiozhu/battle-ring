@@ -3477,15 +3477,19 @@ function updateCamera(dt) {
           break;
           
         case 'follow':
-          // Ikut pemain terdekat
+          // Ikut pemain — stabil seperti dramatic
           const alive = cachedAlivePlayers;
           if (alive.length > 0) {
-            const closest = alive[Math.floor(Math.random() * alive.length)];
-            camDist = 5;
-            camHeight = 3;
-            targetX = closest.x + Math.sin(cameraOrbitAngle * 2) * camDist;
-            targetZ = closest.z + Math.cos(cameraOrbitAngle * 2) * camDist;
-            lookTarget = new THREE.Vector3(closest.x, 1.0, closest.z);
+            // Pilih target tetap, jangan random tiap frame
+            if (!window._followTarget || !window._followTarget.alive || Math.random() < 0.005) {
+              window._followTarget = alive[Math.floor(Math.random() * alive.length)];
+            }
+            const target = window._followTarget;
+            camDist = Math.max(7, arenaRadius * 0.8);  // Lebih jauh (dari 5 → 7+)
+            camHeight = Math.max(4, arenaRadius * 0.4); // Lebih tinggi (dari 3 → 4+)
+            targetX = target.x + Math.sin(cameraOrbitAngle * 1.2) * camDist;  // Orbit lebih lambat (dari 2 → 1.2)
+            targetZ = target.z + Math.cos(cameraOrbitAngle * 1.2) * camDist;
+            lookTarget = new THREE.Vector3(target.x, 1.2, target.z);
           } else {
             camDist = 14; camHeight = 16;
             targetX = Math.sin(cameraOrbitAngle) * camDist;
@@ -3522,15 +3526,18 @@ function updateCamera(dt) {
           break;
           
         case 'close_follow':
-          // Ikut sangat dekat (over shoulder)
+          // Ikut dekat — stabil
           const closeAlive = cachedAlivePlayers;
           if (closeAlive.length > 0) {
-            const target = closeAlive[Math.floor(Math.random() * closeAlive.length)];
-            camDist = 3;
-            camHeight = 2;
-            targetX = target.x + Math.sin(cameraOrbitAngle * 3) * camDist;
-            targetZ = target.z + Math.cos(cameraOrbitAngle * 3) * camDist;
-            lookTarget = new THREE.Vector3(target.x, 1.5, target.z);
+            if (!window._closeFollowTarget || !window._closeFollowTarget.alive || Math.random() < 0.003) {
+              window._closeFollowTarget = closeAlive[Math.floor(Math.random() * closeAlive.length)];
+            }
+            const target = window._closeFollowTarget;
+            camDist = Math.max(5, arenaRadius * 0.5);  // Lebih jauh (dari 3 → 5+)
+            camHeight = Math.max(3, arenaRadius * 0.3); // Lebih tinggi (dari 2 → 3+)
+            targetX = target.x + Math.sin(cameraOrbitAngle * 1.5) * camDist;  // Orbit lebih lambat (dari 3 → 1.5)
+            targetZ = target.z + Math.cos(cameraOrbitAngle * 1.5) * camDist;
+            lookTarget = new THREE.Vector3(target.x, 1.3, target.z);
           } else {
             camDist = 14; camHeight = 16;
             targetX = Math.sin(cameraOrbitAngle) * camDist;
