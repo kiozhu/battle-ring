@@ -1200,6 +1200,8 @@ function setRoundState(state) {
 
   switch (state) {
     case 'WAITING':
+      botsEnabled = false; // Reset supaya bot bisa spawn lagi
+      botsReady = false;
       botRespawnCount = 0; // Reset respawn counter
       info.textContent = 'MENUNGGU';
       timer.textContent = '--';
