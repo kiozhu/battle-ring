@@ -1621,6 +1621,7 @@ function hideBanner() {
 
 // ===== PLAYER MANAGEMENT =====
 const players = new Map();
+window.players = players;  // Expose untuk banter TTS
 
 function hashCode(str) {
   let hash = 0;
@@ -4083,6 +4084,7 @@ class AnnouncerTTS {
 }
 
 const announcer = new AnnouncerTTS();
+window.announcer = announcer;  // Expose untuk banter TTS
 
 // ===== IDLE BANTER SYSTEM - TTS Sapaan saat tidak ada interaksi =====
 class BanterTTS {
@@ -4194,6 +4196,7 @@ class BanterTTS {
 }
 
 const banter = new BanterTTS();
+window.banter = banter;  // Expose untuk debug
 
 function toggleTTS() {
   const enabled = announcer.toggle();
