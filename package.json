@@ -1,16 +1,16 @@
 {
-  "name": "tiktok_live_1",
-  "version": "1.0.0",
+  "name": "battle-ring",
+  "version": "2.0.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-  "keywords": ["tiktok", "live", "overlay"],
-  "author": "broneotodak",
-  "license": "ISC",
-  "description": "TikTok Live interactive overlay with cute character avatars",
+  "keywords": ["tiktok", "live", "game", "3d", "arena", "battle", "threejs", "socketio"],
+  "author": "kiozhu",
+  "license": "MIT",
+  "description": "Game pertarungan 3D real-time untuk TikTok Live — viewer jadi karakter, gift trigger efek visual",
   "dependencies": {
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
