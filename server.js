@@ -731,6 +731,35 @@ app.post('/api/chat/send', async (req, res) => {
   }
 });
 
+// ===== Rate Limiting: Token Bucket =====
+class TokenBucket {
+  constructor(capacity, refillPerSec) {
+    this.capacity = capacity;
+    this.tokens = capacity;
+    this.refillPerSec = refillPerSec;
+    this.last = Date.now();
+    this.dropped = 0;
+  }
+  take() {
+    const elapsed = (Date.now() - this.last) / 1000;
+    this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillPerSec);
+    this.last = Date.now();
+    if (this.tokens >= 1) { this.tokens--; return true; }
+    this.dropped++;
+    return false;
+  }
+}
+
+// Per-event-type rate limits
+const RATE_LIMITS = {
+  member: new TokenBucket(8, 4),    // Burst 8, sustain 4/detik
+  chat:   new TokenBucket(20, 12),  // Burst 20, sustain 12/detik
+  like:   new TokenBucket(4, 2),    // Burst 4, sustain 2/detik (likes are spam)
+  gift:   new TokenBucket(30, 15),  // Burst 30, sustain 15/detik (gift = penting, jangan drop)
+  follow: new TokenBucket(10, 5),   // Burst 10, sustain 5/detik
+  share:  new TokenBucket(6, 3),    // Burst 6, sustain 3/detik
+};
+
 // ===== TikTok Connection (scoped to session) =====
 function connectToTikTok(session) {
   // Set EulerStream API key if available (required for signing)
@@ -873,6 +902,7 @@ function connectToTikTok(session) {
     const user = extractUser(data);
     trackViewer(user);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.member.take()) return;  // Rate limit
     console.log(`👋 ${user.nickname} (@${user.uniqueId}) joined`);
     emitToRoom('viewer-join', { ...user, joinedAt: Date.now() });
   });
@@ -881,6 +911,7 @@ function connectToTikTok(session) {
     const user = extractUser(data);
     trackViewer(user);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.chat.take()) return;  // Rate limit
     const msg = { ...user, comment: data.comment || '', timestamp: Date.now() };
     console.log(`💬 ${msg.nickname}: ${msg.comment}`);
     emitToRoom('chat', msg);
@@ -891,6 +922,7 @@ function connectToTikTok(session) {
     const user = extractUser(data);
     trackViewer(user);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.gift.take()) return;  // Rate limit
     const gift = {
       ...user,
       giftName: data.giftName || 'Gift',
@@ -908,6 +940,7 @@ function connectToTikTok(session) {
     const user = extractUser(data);
     trackViewer(user);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.like.take()) return;  // Rate limit
     emitToRoom('like', {
       ...user,
       likeCount: data.likeCount || 1,
@@ -920,6 +953,7 @@ function connectToTikTok(session) {
     const user = extractUser(data);
     trackViewer(user);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.follow.take()) return;  // Rate limit
     console.log(`⭐ ${user.nickname} followed!`);
     emitToRoom('follow', { ...user, timestamp: Date.now() });
   });
@@ -927,6 +961,7 @@ function connectToTikTok(session) {
   connection.on('share', (data) => {
     const user = extractUser(data);
     if (!isLiveEvent()) return;
+    if (!RATE_LIMITS.share.take()) return;  // Rate limit
     emitToRoom('share', user);
   });
 
