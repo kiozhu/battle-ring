@@ -400,7 +400,7 @@ const CHAR_SCALE = 1.0;
 const MESHY_CHARACTERS = [
   {
     id: 'DJT',
-    path: '/sumo-assets/characters/DJT/DJT_Merged_Animations.glb',
+    path: '/assets/characters/DJT/DJT_Merged_Animations.glb',
     animMap: {
       'Face_Punch_Reaction': 'idle',
       'Walking': 'walk',
@@ -424,7 +424,7 @@ const MESHY_CHARACTERS = [
   },
   {
     id: 'NEO',
-    path: '/sumo-assets/characters/NEO/NEO_Merged_Animations.glb',
+    path: '/assets/characters/NEO/NEO_Merged_Animations.glb',
     animMap: {
       'Idle_10': 'idle',
       'Running': 'walk',
@@ -448,7 +448,7 @@ const MESHY_CHARACTERS = [
   },
   {
     id: 'VP',
-    path: '/sumo-assets/characters/VP/VP_Merged_Animations.glb',
+    path: '/assets/characters/VP/VP_Merged_Animations.glb',
     animMap: {
       'Running': 'idle',
       'Fast_Lightning': 'walk',
@@ -470,7 +470,7 @@ const MESHY_CHARACTERS = [
       dodge: 2.2, block: 2.6, spin: 4.0, tantrum: 5.0, kick: 1.6, groundslam: 3.3
     }
   },
-  { id: 'Soldier', path: '/sumo-assets/characters/Soldier/Soldier.glb', animMap: { 'Idle': 'idle', 'Walk': 'walk', 'Run': 'run', 'TPose': 'punch', 'Idle': 'hit', 'Idle': 'death', 'Idle': 'dance', 'Idle': 'slam', 'Idle': 'dodge', 'Idle': 'block', 'Idle': 'spin', 'Idle': 'tantrum', 'Idle': 'kick', 'Idle': 'groundslam' }, animDurations: { punch: 2.0, hit: 2.0, death: 2.0, dance: 2.0, slam: 2.0, dodge: 2.0, block: 2.0, spin: 2.0, tantrum: 2.0, kick: 2.0, groundslam: 2.0 } },
+  { id: 'Soldier', path: '/assets/characters/Soldier/Soldier.glb', animMap: { 'Idle': 'idle', 'Walk': 'walk', 'Run': 'run', 'TPose': 'punch', 'Idle': 'hit', 'Idle': 'death', 'Idle': 'dance', 'Idle': 'slam', 'Idle': 'dodge', 'Idle': 'block', 'Idle': 'spin', 'Idle': 'tantrum', 'Idle': 'kick', 'Idle': 'groundslam' }, animDurations: { punch: 2.0, hit: 2.0, death: 2.0, dance: 2.0, slam: 2.0, dodge: 2.0, block: 2.0, spin: 2.0, tantrum: 2.0, kick: 2.0, groundslam: 2.0 } },
 ];
 // Loaded Meshy data: { path, preloaded, animMap } keyed by id
 const meshyTemplates = {};
@@ -821,7 +821,7 @@ function updateArenaVisuals() {
 
 // ===== SOUND SYSTEM =====
 // Procedural Web Audio API sounds — no files needed
-// Future: replace with custom .mp3/.ogg from /sumo-assets/sounds/
+// Future: replace with custom .mp3/.ogg from /assets/sounds/
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1126,7 +1126,7 @@ async function loadAssets() {
 
   // Load arena GLB
   try {
-    const arenaGltf = await loader.loadAsync('/sumo-assets/base.glb');
+    const arenaGltf = await loader.loadAsync('/assets/base.glb');
     arenaMesh = arenaGltf.scene;
     arenaMesh.scale.setScalar(ARENA_BASE_SCALE);
     arenaMesh.position.y = 0; // Adjust if needed
