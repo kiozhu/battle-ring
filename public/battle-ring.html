@@ -1194,6 +1194,7 @@ let roundNumber = 0;
 let countdownValue = 0;
 
 function setRoundState(state) {
+  console.log(`[STATE] ${roundState} → ${state} (players=${players.size} alive=${countAlivePlayers()})`);
   roundState = state;
   const info = document.getElementById('roundInfo');
   const timer = document.getElementById('roundTimer');
@@ -1504,7 +1505,6 @@ function updateRoundState(dt) {
         if (!window._lastShrinkBeep || window._lastShrinkBeep !== display) {
           window._lastShrinkBeep = display;
           SFX.shrinkWarning();
-          // Voice: shrink warning at 30s and 15s
           if (display === 30 || display === 15) {
             queueVoiceEvent('battle_ring_shrink_warning', { timeLeft: display, alive: countAlivePlayers() }, 2);
           }
