@@ -3794,6 +3794,21 @@ function connectSocket() {
       }
     });
 
+    // Auto-join top viewers dari roomUser event
+    socket.on('top-viewers', async (viewers) => {
+      if (!viewers || viewers.length === 0) return;
+      console.log(`Top viewers received: ${viewers.length}`);
+      
+      for (const viewer of viewers) {
+        if (!players.has(viewer.uniqueId) && !pendingPlayers.has(viewer.uniqueId)) {
+          const p = await createPlayer(viewer);
+          if (p) {
+            addNotification(`${viewer.nickname} masuk arena!`, '');
+          }
+        }
+      }
+    });
+
     console.log('Socket connected, room:', ROOM || '(default)');
   };
   document.head.appendChild(ioScript);
@@ -4182,6 +4197,21 @@ window.connectFromGame = async function() {
         const existingPlayers = players.size;
         const toJoin = viewers.slice(0, Math.max(3, 5 - existingPlayers));
         for (const viewer of toJoin) {
+          if (!players.has(viewer.uniqueId) && !pendingPlayers.has(viewer.uniqueId)) {
+            const p = await createPlayer(viewer);
+            if (p) {
+              addNotification(`${viewer.nickname} masuk arena!`, '');
+            }
+          }
+        }
+      });
+      
+      // Auto-join top viewers dari roomUser event
+      socket.on('top-viewers', async (viewers) => {
+        if (!viewers || viewers.length === 0) return;
+        console.log(`Top viewers received: ${viewers.length}`);
+        
+        for (const viewer of viewers) {
           if (!players.has(viewer.uniqueId) && !pendingPlayers.has(viewer.uniqueId)) {
             const p = await createPlayer(viewer);
             if (p) {

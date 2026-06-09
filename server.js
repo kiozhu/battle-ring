@@ -770,7 +770,7 @@ function connectToTikTok(session) {
   const username = session.username;
   const connectionOpts = {
     enableExtendedGiftInfo: false,  // Disabled — causes silent failures (Chat-Reader fix)
-    processInitialData: false,      // Skip historical replay events on connect
+    processInitialData: true,       // Ambil replay events (termasuk viewer yang sudah ada)
     fetchRoomInfoOnConnect: false,  // Skip extra room info fetch — causes includes error on API response
   };
   // Add session credentials for sendMessage support (if available)
@@ -810,8 +810,8 @@ function connectToTikTok(session) {
     }, reconnectWaitMs);
   }
 
-  // Grace period: ignore historical replay events for 3 seconds after connect
-  let connectionReadyAt = Infinity;
+  // Langsung proses events (jangan drop replay events — viewer yang sudah ada perlu ditangkap)
+  let connectionReadyAt = Date.now();
 
   connection.connect().then(state => {
     console.log(`✅ Connected to @${username} (Room ID: ${state.roomId})`);
@@ -819,9 +819,6 @@ function connectToTikTok(session) {
     reconnectWaitMs = 2000;
     session.connectionState = { connected: true, roomId: state.roomId, error: null };
     emitToRoom('connection-status', session.connectionState);
-    connectionReadyAt = Date.now() + 3000;
-    console.log('⏳ Grace period: ignoring replay events for 3 seconds...');
-    setTimeout(() => console.log('✅ Grace period ended — processing live events'), 3000);
   }).catch(err => {
     console.error('❌ Connection failed for @' + username + ':', err.message);
     session.connectionState = { connected: false, roomId: null, error: err.message };
@@ -997,6 +994,20 @@ function connectToTikTok(session) {
 
   connection.on('roomUser', (data) => {
     emitToRoom('room-stats', { viewerCount: data.viewerCount });
+    // Track top viewers dari roomUser event (viewer yang sudah ada)
+    if (data.topViewers && Array.isArray(data.topViewers)) {
+      const viewers = [];
+      data.topViewers.forEach(tv => {
+        if (tv.user) {
+          const user = extractUser(tv.user);
+          trackViewer(user);
+          viewers.push(user);
+        }
+      });
+      if (viewers.length > 0) {
+        emitToRoom('top-viewers', viewers);
+      }
+    }
   });
 
   session.connection = connection;
