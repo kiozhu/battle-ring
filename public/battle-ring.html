@@ -2244,7 +2244,8 @@ function eliminatePlayer(player) {
 
 // ===== TIKTOK EVENT HANDLERS =====
 async function handleLike(data) {
-  const count = Math.min(data.likeCount || 1, 3);
+  if (typeof banter !== 'undefined') banter.notifyInteraction();
+  const count = Math.min(data.likeCount || 1, 1);
   let p = players.get(data.uniqueId);
   if (!p) {
     // Auto-join on first like — ganti bot jika ada
@@ -2314,6 +2315,7 @@ async function handleLike(data) {
 }
 
 async function handleChat(data) {
+  if (typeof banter !== 'undefined') banter.notifyInteraction();
   const msg = (data.comment || '').toLowerCase().trim();
 
   // Auto-join on any chat, or pick character with "join djt/neo/vp"
@@ -2421,6 +2423,7 @@ function getGiftInfo(giftName, diamondCount) {
 }
 
 async function handleGift(data) {
+  if (typeof banter !== 'undefined') banter.notifyInteraction();
   let p = players.get(data.uniqueId);
   if (!p) {
     // Auto-join on gift — ganti bot jika ada
@@ -2587,6 +2590,7 @@ async function handleGift(data) {
 }
 
 async function handleFollow(data) {
+  if (typeof banter !== 'undefined') banter.notifyInteraction();
   let p = players.get(data.uniqueId);
   if (!p) { // Auto-join on follow as a reward — ganti bot jika ada
     if (botsEnabled) {
@@ -2615,6 +2619,7 @@ async function handleFollow(data) {
 }
 
 async function handleShare(data) {
+  if (typeof banter !== 'undefined') banter.notifyInteraction();
   let p = players.get(data.uniqueId);
   if (!p) {
     // Auto-join on share — ganti bot jika ada
@@ -4079,10 +4084,122 @@ class AnnouncerTTS {
 
 const announcer = new AnnouncerTTS();
 
+// ===== IDLE BANTER SYSTEM - TTS Sapaan saat tidak ada interaksi =====
+class BanterTTS {
+  constructor() {
+    this.synth = window.speechSynthesis;
+    this.maleVoice = null;
+    this.femaleVoice = null;
+    this.enabled = true;
+    this.lastInteraction = Date.now();
+    this.banterInterval = null;
+    this.banterIndex = 0;
+    
+    this.synth.onvoiceschanged = () => this.loadVoices();
+    this.loadVoices();
+    this.startIdleTimer();
+  }
+  
+  loadVoices() {
+    const voices = this.synth.getVoices();
+    // Suara laki-laki Indonesia
+    this.maleVoice = voices.find(v => 
+      v.lang.startsWith('id') && !v.name.includes('Female') && !v.name.includes('Perempuan')
+    ) || voices.find(v => v.lang.startsWith('id')) || voices.find(v => 
+      v.name.includes('Google UK English Male') || v.name.includes('Microsoft David')
+    );
+    // Suara perempuan Indonesia
+    this.femaleVoice = voices.find(v => 
+      v.lang.startsWith('id') && (v.name.includes('Female') || v.name.includes('Perempuan'))
+    ) || voices.find(v => v.lang.startsWith('id') && v !== this.maleVoice) || voices.find(v => 
+      v.name.includes('Google UK English Female') || v.name.includes('Microsoft Zira')
+    );
+  }
+  
+  notifyInteraction() {
+    this.lastInteraction = Date.now();
+  }
+  
+  startIdleTimer() {
+    // Cek setiap 10 detik apakah ada interaksi
+    setInterval(() => {
+      if (!this.enabled || announcer.isBusy) return;
+      const idleTime = Date.now() - this.lastInteraction;
+      // Jika idle lebih dari 15 detik, mulai banter
+      if (idleTime > 15000) {
+        this.speakBanter();
+      }
+    }, 10000);
+  }
+  
+  speakBanter() {
+    const players = Array.from(window.players?.values() || []).filter(p => p.alive);
+    if (players.length < 2) return;
+    
+    // Pilih 2 karakter random
+    const p1 = players[Math.floor(Math.random() * players.length)];
+    let p2 = players[Math.floor(Math.random() * players.length)];
+    while (p2.uniqueId === p1.uniqueId && players.length > 1) {
+      p2 = players[Math.floor(Math.random() * players.length)];
+    }
+    
+    // Dialog random
+    const dialogues = [
+      // Sapaan
+      { male: `Halo ${p2.nickname}! Siap bertarung?`, female: `Siap ${p1.nickname}! Aku tidak akan kalah!` },
+      { male: `${p2.nickname}! Kamu berani lawan aku?`, female: `Berani dong ${p1.nickname}! Ayo!` },
+      { male: `Wah ${p2.nickname} kelihatan kuat hari ini!`, female: `Terima kasih ${p1.nickname}! Kamu juga!` },
+      // Taunt
+      { male: `${p2.nickname}! Ayo maju! Jangan lari!`, female: `Aku tidak lari ${p1.nickname}! Siap-siap kalah!` },
+      { male: `Siapa yang mau lawan aku?`, female: `Aku ${p1.nickname}! Ayo bertarung!` },
+      { male: `${p2.nickname}! Bersiaplah!`, female: `Aku sudah siap ${p1.nickname}!` },
+      // Obrolan ringan
+      { male: `Cuaca bagus hari ini ya ${p2.nickname}!`, female: `Iya ${p1.nickname}! Cocok buat bertarung!` },
+      { male: `${p2.nickname}! Mau makan apa nanti?`, female: `Mau makan kemenangan ${p1.nickname}!` },
+      { male: `Siapa yang menang ya hari ini?`, female: `Pasti aku ${p1.nickname}!` },
+      { male: `${p2.nickname}! Kamu sudah latihan?`, female: `Sudah ${p1.nickname}! Ayo buktikan!` },
+      // Motivasi
+      { male: `Ayo semangat ${p2.nickname}!`, female: `Semangat ${p1.nickname}! Kita bisa!` },
+      { male: `${p2.nickname}! Jangan menyerah!`, female: `Tidak akan ${p1.nickname}!` },
+      { male: `Siapa yang mau jadi juara?`, female: `Aku ${p1.nickname}! Pasti aku!` },
+      { male: `${p2.nickname}! Ayo tunjukkan kekuatanmu!`, female: `Siap ${p1.nickname}! Lihat ini!` },
+    ];
+    
+    const dialogue = dialogues[this.banterIndex % dialogues.length];
+    this.banterIndex++;
+    
+    // Suara laki-laki bicara dulu
+    this.speak(dialogue.male, this.maleVoice, 0.85, 0.8, () => {
+      // Setelah selesai, suara perempuan jawab
+      setTimeout(() => {
+        this.speak(dialogue.female, this.femaleVoice, 1.0, 1.2);
+      }, 500);
+    });
+    
+    // Update last interaction supaya tidak spam
+    this.lastInteraction = Date.now();
+  }
+  
+  speak(text, voice, rate, pitch, onEnd) {
+    if (!this.enabled || !this.synth) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    if (voice) utterance.voice = voice;
+    utterance.lang = voice?.lang || 'id-ID';
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    utterance.volume = 0.8; // Lebih pelan dari announcer
+    if (onEnd) utterance.onend = onEnd;
+    this.synth.speak(utterance);
+  }
+}
+
+const banter = new BanterTTS();
+
 function toggleTTS() {
   const enabled = announcer.toggle();
+  banter.enabled = enabled;
   const btn = document.getElementById("ttsToggleBtn");
-  btn.textContent = enabled ? "Announcer: ON" : "Announcer: ON";
+  btn.textContent = enabled ? "Announcer: ON" : "Announcer: OFF";
   btn.style.background = enabled ? "#ff8800" : "#222";
   btn.style.color = enabled ? "#fff" : "#ccc";
   addNotification(enabled ? "Announcer aktif!" : "Announcer nonaktif");
