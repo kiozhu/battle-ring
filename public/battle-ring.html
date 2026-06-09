@@ -557,13 +557,17 @@ window.applyArenaTheme = function(themeName) {
   scene.background = skyTexture;
   
   // Update ocean color
-  if (typeof ocean !== 'undefined' && ocean) {
+  if (typeof ocean !== 'undefined' && ocean && ocean.material) {
     ocean.material.color.set(theme.ocean);
   }
   
-  // Update arena color
+  // Update arena color — traverse GLB model
   if (arenaMesh) {
-    arenaMesh.material.color.set(theme.arena);
+    arenaMesh.traverse(child => {
+      if (child.isMesh && child.material) {
+        child.material.color.set(theme.arena);
+      }
+    });
   }
   
   addNotification(`🏔️ Arena: ${theme.name}`, 'power');
