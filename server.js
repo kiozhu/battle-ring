@@ -879,7 +879,7 @@ function connectToTikTok(session) {
     };
   }
 
-  const MAX_VIEWERS = 500;
+  const MAX_VIEWERS = 2000;
 
   function trackViewer(user) {
     if (!user.id) return;
