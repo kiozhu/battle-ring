@@ -3775,6 +3775,25 @@ function connectSocket() {
       }
     });
 
+    // Auto-join existing viewers as players when connected
+    socket.on('viewer-list', async (viewers) => {
+      if (!viewers || viewers.length === 0) return;
+      console.log(`Viewer list received: ${viewers.length} viewers`);
+      addNotification(`${viewers.length} penonton terdeteksi!`, 'power');
+      
+      // Auto-join up to 5 viewers as players (if no players yet)
+      const existingPlayers = players.size;
+      const toJoin = viewers.slice(0, Math.max(3, 5 - existingPlayers));
+      for (const viewer of toJoin) {
+        if (!players.has(viewer.uniqueId) && !pendingPlayers.has(viewer.uniqueId)) {
+          const p = await createPlayer(viewer);
+          if (p) {
+            addNotification(`${viewer.nickname} masuk arena!`, '');
+          }
+        }
+      }
+    });
+
     console.log('Socket connected, room:', ROOM || '(default)');
   };
   document.head.appendChild(ioScript);
@@ -4151,6 +4170,24 @@ window.connectFromGame = async function() {
           statusEl.textContent = `❌ ${data.error}`;
           statusEl.style.color = '#ff4444';
           addNotification(`Error: ${data.error}`, '');
+        }
+      });
+      
+      // Auto-join existing viewers as players when connected
+      socket.on('viewer-list', async (viewers) => {
+        if (!viewers || viewers.length === 0) return;
+        console.log(`Viewer list received: ${viewers.length} viewers`);
+        addNotification(`${viewers.length} penonton terdeteksi!`, 'power');
+        
+        const existingPlayers = players.size;
+        const toJoin = viewers.slice(0, Math.max(3, 5 - existingPlayers));
+        for (const viewer of toJoin) {
+          if (!players.has(viewer.uniqueId) && !pendingPlayers.has(viewer.uniqueId)) {
+            const p = await createPlayer(viewer);
+            if (p) {
+              addNotification(`${viewer.nickname} masuk arena!`, '');
+            }
+          }
         }
       });
       
