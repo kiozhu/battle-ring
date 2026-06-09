@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import { TikTokLiveConnection, SignConfig } from 'tiktok-live-connector';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,7 +15,86 @@ const server = createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 const PORT = process.env.PORT || 3000;
+const AUTO_CONNECT = process.env.AUTO_CONNECT === 'true';
 const USERNAME = process.env.TIKTOK_USERNAME || 'broneotodak';
+
+// ===== STABILITY: Uncaught Exception Handlers =====
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err.message);
+  console.error(err.stack);
+  // Don't exit — keep server running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection:', reason);
+  // Don't exit — keep server running
+});
+
+// ===== STABILITY: Graceful Shutdown =====
+let isShuttingDown = false;
+function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`\n🛑 ${signal} received. Shutting down gracefully...`);
+  
+  // Stop all timers
+  clearInterval(memoryCleanupInterval);
+  
+  // Disconnect all TikTok connections
+  sessions.forEach((session, key) => {
+    try {
+      if (session.connection) {
+        session.connection.disconnect();
+      }
+    } catch (e) {
+      console.warn(`Error disconnecting ${key}:`, e.message);
+    }
+  });
+  
+  // Close Socket.IO
+  io.close(() => {
+    console.log('Socket.IO closed');
+  });
+  
+  // Close HTTP server
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+  
+  // Force exit after 5 seconds
+  setTimeout(() => {
+    console.log('⚠️ Force exit after timeout');
+    process.exit(1);
+  }, 5000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ===== STABILITY: Memory Leak Prevention =====
+const memoryCleanupInterval = setInterval(() => {
+  const memUsage = process.memoryUsage();
+  const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+  
+  // Log memory usage every 5 minutes
+  if (heapUsedMB > 100) {
+    console.log(`⚠️ Memory usage: ${heapUsedMB}MB heap`);
+  }
+  
+  // Clean up stale sessions (no activity for 30 minutes)
+  const now = Date.now();
+  const STALE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  sessions.forEach((session, key) => {
+    if (session.lastActivity && (now - session.lastActivity) > STALE_TIMEOUT) {
+      console.log(`🧹 Cleaning stale session: ${key}`);
+      try {
+        if (session.connection) session.connection.disconnect();
+      } catch (e) { /* ignore */ }
+      sessions.delete(key);
+    }
+  });
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // ===== AI Voice Avatar =====
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
@@ -261,25 +341,25 @@ function buildCommentaryPrompt(eventType, eventData, recentContext, liveContext,
       return `${contextStr}\nViewer count hit ${eventData.count}! Celebrate casually.`;
 
     // ===== SUMO SMASH GAME COMMENTARY — Nurin (Female Host, BM Pasar / Manglish) =====
-    case 'sumo_round_start':
+    case 'battle_ring_round_start':
       return `${contextStr}\nKau Nurin, host perempuan game SUMO SMASH live. Kau ceria, playful dan hype! Round ${eventData.round} nak start! ${eventData.playerCount} players atas arena. Nama dorang: ${eventData.players}. Hype kan macam host sukan perempuan Malaysia! Cakap BM pasar campur English. Gaya perempuan muda yang excited. SHORT dan HYPE. 10-20 words je. PENTING: Jangan guna perkataan kasar — game ni fun dan friendly!`;
-    case 'sumo_fight':
+    case 'battle_ring_fight':
       return `${contextStr}\nKau Nurin, host perempuan yang ceria. GO! Round ${eventData.round} dah start! ${eventData.playerCount} players tengah berlawan. Panaskan suasana! Cakap BM pasar, gaya cheerful. SHORT. 10-20 words. PENTING: Guna bahasa positif — "tolak", "push", "lawan", bukan "belasah" atau "bunuh".`;
-    case 'sumo_elimination':
+    case 'battle_ring_elimination':
       return `${contextStr}\nKau Nurin, host perempuan yang expressive. ${eventData.victim} baru terjatuh dari arena${eventData.killer ? ` sebab ${eventData.killer} tolak` : ''}! Tinggal ${eventData.remaining} players je. React dramatic tapi cute! BM pasar. 10-20 words. PENTING: Cakap "terjatuh", "tergelincir", "out" — JANGAN cakap "mati", "kena bunuh", "belasah".`;
-    case 'sumo_gift_power':
+    case 'battle_ring_gift_power':
       return `${contextStr}\nKau Nurin, host perempuan. ${eventData.nickname} baru guna ${eventData.powerName} (${eventData.diamonds} diamonds)! ${eventData.effect}. Kau excited gila sebab gift besar! Tunjuk appreciation. BM pasar. 10-20 words.`;
-    case 'sumo_winner':
+    case 'battle_ring_winner':
       return `${contextStr}\nKau Nurin, host perempuan yang hype. ${eventData.winner} menang Round ${eventData.round}! ${eventData.kills} points round ni. Total ${eventData.totalWins} wins. Celebrate champion dengan semangat! BM pasar. 15-25 words.`;
-    case 'sumo_draw':
+    case 'battle_ring_draw':
       return `${contextStr}\nKau Nurin, host perempuan. Round ${eventData.round} SERI! Semua dah terkeluar, takde sapa menang! Kau terkejut dan gelak sikit. BM pasar. 10-15 words.`;
-    case 'sumo_shrink_warning':
+    case 'battle_ring_shrink_warning':
       return `${contextStr}\nKau Nurin, host perempuan. Arena tengah mengecik! Tinggal ${eventData.timeLeft} saat je dan ${eventData.alive} players masih bertahan. Buat suspens dengan gaya cheerful. BM pasar. 10-20 words.`;
-    case 'sumo_join':
+    case 'battle_ring_join':
       return `${contextStr}\nKau Nurin, host perempuan yang friendly. ${eventData.nickname} baru masuk arena Sumo Smash${eventData.character ? ` sebagai ${eventData.character}` : ''}! Welcome dia macam kawan baru. BM pasar. 10-15 words.`;
-    case 'sumo_viewers_welcome':
+    case 'battle_ring_viewers_welcome':
       return `${contextStr}\nKau Nurin, host perempuan SUMO SMASH yang ceria dan welcoming. ${eventData.count} viewers baru masuk live! Nama dorang: ${eventData.names}. Welcome semua sekali, ajak dorang main — dorang auto masuk arena! Cakap fun dan inviting. Kalau ramai sangat, sebut 2-3 nama je then "dan kawan-kawan". BM pasar campur English. 15-25 words.`;
-    case 'sumo_invite_friends':
+    case 'battle_ring_invite_friends':
       return `${contextStr}\nKau Nurin, host game SUMO SMASH. Sekarang ada ${eventData.playerCount} players dan ${eventData.viewerCount} viewers. Ajak viewers invite kawan dorang join live ni. Buat dia rasa excited nak share. Cakap dalam ${eventData.language || 'BM pasar'}. Fun dan persuasive. 15-25 words.`;
 
     // ===== MYSTIC NURIN — AI Fortune Reader (Bahasa Indonesia Gaul, Misterius & Playful) =====
@@ -376,7 +456,7 @@ app.get('/voice', (req, res) => res.sendFile(join(__dirname, 'public', 'voice.ht
 app.get('/hillclimb', (req, res) => res.sendFile(join(__dirname, 'public', 'hillclimb.html')));
 app.get('/funclass', (req, res) => res.sendFile(join(__dirname, 'public', 'funclass.html')));
 app.get('/fichy', (req, res) => res.sendFile(join(__dirname, 'public', 'fichy.html')));
-app.get('/sumo', (req, res) => res.sendFile(join(__dirname, 'public', 'sumo.html')));
+app.get('/sumo', (req, res) => res.sendFile(join(__dirname, 'public', 'battle-ring.html')));
 app.get('/fortuneteller', (req, res) => res.sendFile(join(__dirname, 'public', 'fortuneteller.html')));
 
 // API endpoint to get current config
@@ -387,10 +467,58 @@ app.get('/api/config', (req, res) => {
     username: session ? session.username : USERNAME,
     connected: session ? session.connectionState.connected : false,
     room: session ? session.username : '',
+    autoConnect: AUTO_CONNECT,
   });
 });
 
+// GET /api/auto-connect — Get auto-connect status
+app.get('/api/auto-connect', (req, res) => {
+  res.json({ enabled: AUTO_CONNECT, username: USERNAME });
+});
+
+// POST /api/auto-connect — Toggle auto-connect (updates .env)
+app.post('/api/auto-connect', (req, res) => {
+  const { enabled } = req.body;
+  const envPath = join(__dirname, '.env');
+  
+  try {
+    let envContent = '';
+    if (existsSync(envPath)) {
+      envContent = readFileSync(envPath, 'utf-8');
+    }
+    
+    // Update or add AUTO_CONNECT
+    if (envContent.includes('AUTO_CONNECT=')) {
+      envContent = envContent.replace(/AUTO_CONNECT=.*/, `AUTO_CONNECT=${enabled}`);
+    } else {
+      envContent += `\nAUTO_CONNECT=${enabled}`;
+    }
+    
+    writeFileSync(envPath, envContent);
+    res.json({ success: true, enabled });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ===== Multi-Host API =====
+
+// POST /api/connect — Connect to TikTok (no PIN required for game)
+app.post('/api/connect', (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username required' });
+  
+  // Create or get session
+  if (!sessions.has(username)) {
+    sessions.set(username, new StreamSession(username, '', 'Host'));
+    console.log(`🎮 New game session: @${username}`);
+  }
+  
+  const session = sessions.get(username);
+  connectToTikTok(session);
+  
+  res.json({ ok: true, room: username, hostName: 'Host', mode: 'game' });
+});
 
 // POST /api/host/auth — validate PIN, create/get session
 app.post('/api/host/auth', (req, res) => {
@@ -666,29 +794,86 @@ function connectToTikTok(session) {
   }
 
   const username = session.username;
-  const connectionOpts = { enableExtendedGiftInfo: true };
+  const connectionOpts = {
+    enableExtendedGiftInfo: false,  // Disabled — causes silent failures (Chat-Reader fix)
+    processInitialData: false,      // Skip historical replay events on connect
+    fetchRoomInfoOnConnect: false,  // Skip extra room info fetch — causes includes error on API response
+  };
   // Add session credentials for sendMessage support (if available)
   if (process.env.TIKTOK_SESSION_ID) connectionOpts.sessionId = process.env.TIKTOK_SESSION_ID;
   if (process.env.TIKTOK_TARGET_IDC) connectionOpts.ttTargetIdc = process.env.TIKTOK_TARGET_IDC;
   const connection = new TikTokLiveConnection(username, connectionOpts);
+  session.connection = connection;
+
+  // Reconnect config
+  let reconnectEnabled = true;
+  let reconnectCount = 0;
+  const maxReconnectAttempts = 5;
+  let reconnectWaitMs = 2000;
+
+  function scheduleReconnect(reason) {
+    if (!reconnectEnabled) return;
+    if (reconnectCount >= maxReconnectAttempts) {
+      console.error(`❌ Max reconnect attempts (${maxReconnectAttempts}) reached for @${username}`);
+      session.connectionState = { connected: false, roomId: null, error: `Reconnect failed: ${reason}` };
+      emitToRoom('connection-status', session.connectionState);
+      return;
+    }
+    reconnectWaitMs = Math.min(reconnectWaitMs * 2, 30000); // Cap at 30s
+    reconnectCount++;
+    console.log(`🔄 Reconnecting to @${username} in ${reconnectWaitMs}ms (attempt ${reconnectCount}/${maxReconnectAttempts})...`);
+    setTimeout(() => {
+      connection.connect().then(state => {
+        console.log(`✅ Reconnected to @${username} (Room ID: ${state.roomId})`);
+        reconnectCount = 0;
+        reconnectWaitMs = 2000;
+        session.connectionState = { connected: true, roomId: state.roomId, error: null };
+        emitToRoom('connection-status', session.connectionState);
+      }).catch(err => {
+        console.error(`❌ Reconnect failed for @${username}:`, err.message);
+        scheduleReconnect(err.message);
+      });
+    }, reconnectWaitMs);
+  }
 
   // Grace period: ignore historical replay events for 3 seconds after connect
   let connectionReadyAt = Infinity;
 
   connection.connect().then(state => {
     console.log(`✅ Connected to @${username} (Room ID: ${state.roomId})`);
+    reconnectCount = 0;
+    reconnectWaitMs = 2000;
     session.connectionState = { connected: true, roomId: state.roomId, error: null };
-    io.to(session.username).emit('connection-status', session.connectionState);
-    // Also emit to default room for backward compat
-    io.to('__default__').emit('connection-status', session.connectionState);
+    emitToRoom('connection-status', session.connectionState);
     connectionReadyAt = Date.now() + 3000;
     console.log('⏳ Grace period: ignoring replay events for 3 seconds...');
     setTimeout(() => console.log('✅ Grace period ended — processing live events'), 3000);
   }).catch(err => {
-    console.error('❌ Connection failed:', err.message);
+    console.error('❌ Connection failed for @' + username + ':', err.message);
     session.connectionState = { connected: false, roomId: null, error: err.message };
-    io.to(session.username).emit('connection-status', session.connectionState);
-    io.to('__default__').emit('connection-status', session.connectionState);
+    emitToRoom('connection-status', session.connectionState);
+    scheduleReconnect(err.message);
+  });
+
+  // Handle disconnect — auto reconnect
+  connection.on('disconnected', ({ code, reason }) => {
+    console.log(`⚠️ Disconnected from @${username}: code=${code} reason=${reason}`);
+    session.connectionState = { connected: false, roomId: null, error: reason || 'Disconnected' };
+    emitToRoom('connection-status', session.connectionState);
+    scheduleReconnect(reason || 'disconnected');
+  });
+
+  // Handle stream end — don't reconnect
+  connection.on('streamEnd', () => {
+    console.log(`📺 Stream ended for @${username}`);
+    reconnectEnabled = false;
+    session.connectionState = { connected: false, roomId: null, error: 'Stream ended' };
+    emitToRoom('connection-status', session.connectionState);
+  });
+
+  // Handle errors — don't crash, just log
+  connection.on('error', (err) => {
+    console.error(`⚠️ TikTok error for @${username}:`, err.info || err.exception || err);
   });
 
   function isLiveEvent() {
@@ -732,6 +917,9 @@ function connectToTikTok(session) {
 
   // Emit to session room + default room
   function emitToRoom(event, data) {
+    const roomSockets = io.sockets.adapter.rooms.get(session.username);
+    const defaultSockets = io.sockets.adapter.rooms.get('__default__');
+    console.log(`📡 Emit ${event} to room ${session.username} (${roomSockets?.size || 0} sockets) and __default__ (${defaultSockets?.size || 0} sockets)`);
     io.to(session.username).emit(event, data);
     io.to('__default__').emit(event, data);
   }
@@ -798,13 +986,22 @@ function connectToTikTok(session) {
   });
 
   connection.on('social', (data) => {
-    const user = extractUser(data);
-    if (!isLiveEvent()) return;
-    if (data.displayType?.includes('follow')) {
-      emitToRoom('follow', { ...user, timestamp: Date.now() });
-    }
-    if (data.displayType?.includes('share')) {
-      emitToRoom('share', user);
+    try {
+      const user = extractUser(data);
+      if (!isLiveEvent()) return;
+      // displayType can be at different paths depending on v2.x version
+      const displayType = data.displayType
+        || data.common?.displayText?.displayType
+        || data.data?.displayType
+        || '';
+      if (typeof displayType === 'string' && displayType.includes('follow')) {
+        emitToRoom('follow', { ...user, timestamp: Date.now() });
+      }
+      if (typeof displayType === 'string' && displayType.includes('share')) {
+        emitToRoom('share', user);
+      }
+    } catch (e) {
+      console.warn('⚠️ Social event parse error:', e.message);
     }
   });
 
@@ -812,17 +1009,8 @@ function connectToTikTok(session) {
     emitToRoom('room-stats', { viewerCount: data.viewerCount });
   });
 
-  connection.on('disconnected', () => {
-    console.log(`⚠️ Disconnected from TikTok Live (@${username})`);
-    session.connectionState = { connected: false, roomId: null, error: 'Disconnected' };
-    emitToRoom('connection-status', session.connectionState);
-  });
-
-  connection.on('error', (err) => {
-    console.error(`❌ Error (@${username}):`, err.message);
-  });
-
   session.connection = connection;
+  session.lastActivity = Date.now();
 }
 
 // ===== Demo Mode (scoped to session) =====
@@ -1141,7 +1329,17 @@ server.listen(PORT, '0.0.0.0', () => {
 ║   EulerStream: ${process.env.EULER_API_KEY ? 'Configured ✅' : 'NOT SET ❌'}                 ║
 ║   Voice AI:    ${OPENAI_API_KEY && ELEVENLABS_API_KEY ? 'Configured ✅' : 'NOT SET ❌'}                 ║
 ║   Host PINs:   ${pinCount > 0 ? `${pinCount} configured ✅` : 'None (single-host) ⚠️'}             ║
+║   Auto-Connect: ${AUTO_CONNECT ? 'Enabled ✅' : 'Disabled ❌'}                ║
 ╚══════════════════════════════════════════════╝
   `);
 });
+// Auto-connect to TikTok Live if enabled
+if (AUTO_CONNECT && USERNAME) {
+  console.log(`\n🔄 Auto-connecting to @${USERNAME}...`);
+  // Create a default session and connect
+  const defaultSession = new StreamSession(USERNAME, '', 'Auto');
+  sessions.set(USERNAME, defaultSession);
+  connectToTikTok(defaultSession);
+}
+
 }); // end loadNeoPersonality

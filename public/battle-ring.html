@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥊</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥊</text></svg>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battle Ring - TikTok Live Arena Battle</title>
@@ -38,6 +40,9 @@
       display: flex; justify-content: space-between; align-items: center;
       pointer-events: none;
     }
+    #topBar > * {
+      pointer-events: auto;
+    }
     .top-pill {
       background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
       border-radius: 16px; padding: 5px 14px; border: 1px solid rgba(255,255,255,0.1);
@@ -46,6 +51,28 @@
     }
     .top-pill .label { color: #888; font-weight: 400; font-size: 10px; }
     .top-pill.live { border-color: rgba(255,68,68,0.5); }
+    .dashboard-btn {
+      border-color: rgba(37,244,238,0.4) !important;
+      color: #25f4ee !important;
+    }
+    .dashboard-btn:hover {
+      background: rgba(37,244,238,0.15) !important;
+      border-color: rgba(37,244,238,0.8) !important;
+      transform: scale(1.05);
+    }
+    .connect-btn {
+      border-color: rgba(0,255,136,0.4) !important;
+      color: #00ff88 !important;
+    }
+    .connect-btn:hover {
+      background: rgba(0,255,136,0.15) !important;
+      border-color: rgba(0,255,136,0.8) !important;
+      transform: scale(1.05);
+    }
+    .connect-btn.connected {
+      border-color: rgba(0,255,136,0.8) !important;
+      background: rgba(0,255,136,0.2) !important;
+    }
     .live-dot { width: 7px; height: 7px; background: #ff4444; border-radius: 50%; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
@@ -166,10 +193,10 @@
 
     <!-- Loading Screen -->
     <div id="loadingScreen">
-      <h1>SUMO SMASH</h1>
-      <div class="subtitle">Push them off the arena!</div>
+      <h1>BATTLE RING</h1>
+      <div class="subtitle">Dorong mereka keluar dari arena!</div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-      <div id="loadingText">Loading assets...</div>
+      <div id="loadingText">Memuat aset...</div>
     </div>
 
     <!-- HUD -->
@@ -180,12 +207,38 @@
         <span class="label">players</span>
       </div>
       <div class="top-center">
-        <div class="round-pill" id="roundInfo">WAITING</div>
+        <div class="round-pill" id="roundInfo">MENUNGGU</div>
         <div class="timer-pill" id="roundTimer">--</div>
       </div>
       <div class="top-pill">
         <span class="label">alive</span>
         <span id="aliveCount">0</span>
+      </div>
+      <button id="dashboardBtn" class="top-pill dashboard-btn" style="cursor:pointer;transition:all 0.2s;pointer-events:auto;z-index:9999;border:1px solid rgba(37,244,238,0.4);position:relative;padding:5px 8px;" title="Dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
+      <button id="connectBtn" class="top-pill connect-btn" style="cursor:pointer;transition:all 0.2s;pointer-events:auto;z-index:9999;border:1px solid rgba(0,255,136,0.4);position:relative;padding:5px 8px;" title="Connect TikTok">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </button>
+      <div id="connectPopup" onclick="event.stopPropagation()" style="display:none;position:fixed;top:50px;right:12px;z-index:99999;pointer-events:auto;;background:rgba(0,0,0,0.9);border:1px solid rgba(0,255,136,0.4);border-radius:12px;padding:16px;min-width:220px;backdrop-filter:blur(10px);">
+        <div style="color:#fff;font-size:14px;font-weight:600;margin-bottom:12px;">Connect TikTok</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="color:#888;font-size:16px;">@</span>
+          <input type="text" id="connectUsername" placeholder="username" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 10px;color:#fff;font-size:14px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="event.stopPropagation(); connectFromGame()" style="flex:1;background:rgba(0,255,136,0.2);border:1px solid rgba(0,255,136,0.4);border-radius:6px;padding:8px;color:#00ff88;font-size:13px;font-weight:600;cursor:pointer;">Connect</button>
+          <button onclick="event.stopPropagation(); toggleConnectPopup()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;color:#888;font-size:13px;cursor:pointer;">✕</button>
+        </div>
+        <div id="connectStatus" style="margin-top:8px;font-size:11px;color:#888;text-align:center;"></div>
       </div>
     </div>
 
@@ -212,35 +265,35 @@
       </div>
       <div class="guide-item">
         <div class="guide-icon">❤️</div>
-        <div><div class="guide-label">LIKE</div><div class="guide-desc">SUPER Push!</div></div>
+        <div><div class="guide-label">LIKE</div><div class="guide-desc">DORONG Super!</div></div>
       </div>
       <div class="guide-item">
         <div class="guide-icon">💬</div>
-        <div><div class="guide-label">CHAT</div><div class="guide-desc">Dodge!</div></div>
+        <div><div class="guide-label">CHAT</div><div class="guide-desc">Hindar!</div></div>
       </div>
       <div class="guide-item">
         <div class="guide-icon">➕</div>
-        <div><div class="guide-label">FOLLOW</div><div class="guide-desc">+Power</div></div>
+        <div><div class="guide-label">FOLLOW</div><div class="guide-desc">+Kekuatan</div></div>
       </div>
       <div class="guide-item">
         <div class="guide-icon">🔄</div>
-        <div><div class="guide-label">SHARE</div><div class="guide-desc">Shield</div></div>
+        <div><div class="guide-label">SHARE</div><div class="guide-desc">Perisai</div></div>
       </div>
       <div class="guide-divider"></div>
       <div class="guide-gift">
-        <div class="g-tier">🎁 1-10</div>
+        <div class="g-tier">🌹 1-10</div>
         <div class="g-name">Power Up</div>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🎁 11-99</div>
+        <div class="g-tier">🍩 11-99</div>
         <div class="g-name">Slam</div>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🎁 100+</div>
+        <div class="g-tier">🦁 100+</div>
         <div class="g-name">Shockwave</div>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🎁 500+</div>
+        <div class="g-tier">🐋 500+</div>
         <div class="g-name">Meteor!</div>
       </div>
     </div>
@@ -262,6 +315,20 @@
   <div id="debugPanel">
     <div class="debug-title">SPAWN</div>
     <div id="spawnButtons"></div>
+    <div class="debug-title" style="margin-top:8px;">BOTS</div>
+    <button class="dbtn" onclick="spawnBots()" style="border-left:3px solid #44aaff;">+3 Bot</button>
+    <button class="dbtn" onclick="removeBots()" style="border-left:3px solid #ff4444;">Hapus Bot</button>
+    <div class="debug-title" style="margin-top:8px;">TEST GIFT</div>
+    <button class="dbtn" onclick="testGift('small')" style="border-left:3px solid #44ff44;">🌹 Small</button>
+    <button class="dbtn" onclick="testGift('medium')" style="border-left:3px solid #ffaa00;">⚡ Medium</button>
+    <button class="dbtn" onclick="testGift('big')" style="border-left:3px solid #ff4400;">🌪️ Big</button>
+    <button class="dbtn" onclick="testGift('vip')" style="border-left:3px solid #ff00ff;">☄️ VIP</button>
+    <div class="debug-title" style="margin-top:8px;">ARENA</div>
+    <button class="dbtn" onclick="applyArenaTheme('blue_sky')" style="border-left:3px solid #87CEEB;">☀️ Langit</button>
+    <button class="dbtn" onclick="applyArenaTheme('sunset')" style="border-left:3px solid #ff6b35;">🌅 Sunset</button>
+    <button class="dbtn" onclick="applyArenaTheme('night')" style="border-left:3px solid #1a1a4e;">🌙 Malam</button>
+    <button class="dbtn" onclick="applyArenaTheme('forest')" style="border-left:3px solid #4a7c2e;">🌲 Hutan</button>
+    <button class="dbtn" onclick="applyArenaTheme('desert')" style="border-left:3px solid #ff8c42;">🏜️ Gurun</button>
     <div class="debug-title" style="margin-top:8px;">FOCUS</div>
     <div id="focusButtons"></div>
     <div id="animSection" style="display:none;">
@@ -277,8 +344,8 @@
     <button class="dbtn" onclick="window._debugAction('shrink')">Shrink (S)</button>
     <button class="dbtn" id="autoCamBtn" onclick="window._debugAction('autocam')" style="border-left:3px solid #44aaff;">AutoCam: ON</button>
     <div class="debug-title" style="margin-top:8px;">VOICE</div>
-    <button class="dbtn" id="voiceToggleBtn" onclick="window._toggleVoice()" style="border-left:3px solid #ec4899;">Voice: OFF</button>
-    <button class="dbtn" onclick="window._testVoice()" style="border-left:3px solid #ec4899;">Test Voice</button>
+    <button class="dbtn" id="ttsToggleBtn" onclick="toggleTTS()" style="border-left:3px solid #ff8800;">Announcer: ON</button>
+    <button class="dbtn" onclick="testAnnouncer()" style="border-left:3px solid #ff8800;">Test Announcer</button>
   </div>
   <style>
     #debugPanel {
@@ -318,9 +385,10 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 const MAX_PLAYERS = 20;
 const ARENA_START_RADIUS = 15;
 const ARENA_END_RADIUS = 0.5;    // circle shrinks all the way down
-const ROUND_DURATION = 90;       // total round time in seconds
+const ROUND_DURATION = 90;
+const MIN_ROUND_DURATION = 30; // Minimal 30 detik sebelum round bisa berakhir       // total round time in seconds
 const ROUND_COUNTDOWN = 5;
-const MIN_PLAYERS_TO_START = 3;
+const MIN_PLAYERS_TO_START = 1;
 const INTERMISSION_TIME = 8;
 const GRAVITY = 20;
 const BASE_PUSH = 2.5;
@@ -402,7 +470,7 @@ const MESHY_CHARACTERS = [
       dodge: 2.2, block: 2.6, spin: 4.0, tantrum: 5.0, kick: 1.6, groundslam: 3.3
     }
   },
-  // Future: { id: 'KIM', path: '/sumo-assets/characters/KIM/KIM_Merged.glb', animMap: { ... } },
+  { id: 'Soldier', path: '/sumo-assets/characters/Soldier/Soldier.glb', animMap: { 'Idle': 'idle', 'Walk': 'walk', 'Run': 'run', 'TPose': 'punch', 'Idle': 'hit', 'Idle': 'death', 'Idle': 'dance', 'Idle': 'slam', 'Idle': 'dodge', 'Idle': 'block', 'Idle': 'spin', 'Idle': 'tantrum', 'Idle': 'kick', 'Idle': 'groundslam' }, animDurations: { punch: 2.0, hit: 2.0, death: 2.0, dance: 2.0, slam: 2.0, dodge: 2.0, block: 2.0, spin: 2.0, tantrum: 2.0, kick: 2.0, groundslam: 2.0 } },
 ];
 // Loaded Meshy data: { path, preloaded, animMap } keyed by id
 const meshyTemplates = {};
@@ -424,22 +492,82 @@ renderer.toneMappingExposure = 1.4;
 
 const scene = new THREE.Scene();
 
-// Sky gradient background using canvas texture
-const skyCanvas = document.createElement('canvas');
-skyCanvas.width = 1;
-skyCanvas.height = 256;
-const skyCtx = skyCanvas.getContext('2d');
-const skyGradient = skyCtx.createLinearGradient(0, 0, 0, 256);
-skyGradient.addColorStop(0.0, '#4A90D9');   // Top - bright blue
-skyGradient.addColorStop(0.3, '#87CEEB');   // Mid - sky blue
-skyGradient.addColorStop(0.6, '#B0E0E6');   // Lower - powder blue
-skyGradient.addColorStop(0.8, '#E0F0FF');   // Horizon - very light blue
-skyGradient.addColorStop(1.0, '#FFFFFF');   // Bottom - white
-skyCtx.fillStyle = skyGradient;
-skyCtx.fillRect(0, 0, 1, 256);
-const skyTexture = new THREE.CanvasTexture(skyCanvas);
-skyTexture.needsUpdate = true;
-scene.background = skyTexture;
+// ===== ARENA THEMES =====
+window.ARENA_THEMES = {
+  'blue_sky': {
+    name: 'Langit Biru',
+    sky: ['#4A90D9', '#87CEEB', '#B0E0E6', '#E0F0FF', '#FFFFFF'],
+    ocean: '#006994',
+    arena: '#c4956a',
+    fog: '#d0e8ff'
+  },
+  'sunset': {
+    name: 'Sunset',
+    sky: ['#1a0a2e', '#4a1942', '#ff6b35', '#ff9a56', '#ffd166'],
+    ocean: '#1a0a2e',
+    arena: '#8b4513',
+    fog: '#4a1942'
+  },
+  'night': {
+    name: 'Malam Hari',
+    sky: ['#0a0a2e', '#1a1a4e', '#2a2a6e', '#3a3a8e', '#4a4aae'],
+    ocean: '#0a0a3e',
+    arena: '#2a2a2a',
+    fog: '#1a1a3e'
+  },
+  'forest': {
+    name: 'Hutan',
+    sky: ['#2d5016', '#4a7c2e', '#6ba340', '#8fc460', '#b5e48c'],
+    ocean: '#1a4010',
+    arena: '#5c4033',
+    fog: '#2d5016'
+  },
+  'desert': {
+    name: 'Gurun',
+    sky: ['#ff6b35', '#ff8c42', '#ffa62b', '#ffc078', '#ffe0b2'],
+    ocean: '#c19a6b',
+    arena: '#d4a76a',
+    fog: '#ff6b35'
+  }
+};
+
+let currentTheme = 'blue_sky';
+
+window.applyArenaTheme = function(themeName) {
+  const theme = ARENA_THEMES[themeName];
+  if (!theme) return;
+  
+  currentTheme = themeName;
+  
+  // Update sky
+  const skyCanvas = document.createElement('canvas');
+  skyCanvas.width = 1;
+  skyCanvas.height = 256;
+  const skyCtx = skyCanvas.getContext('2d');
+  const skyGradient = skyCtx.createLinearGradient(0, 0, 0, 256);
+  theme.sky.forEach((color, i) => {
+    skyGradient.addColorStop(i / (theme.sky.length - 1), color);
+  });
+  skyCtx.fillStyle = skyGradient;
+  skyCtx.fillRect(0, 0, 1, 256);
+  const skyTexture = new THREE.CanvasTexture(skyCanvas);
+  skyTexture.needsUpdate = true;
+  // Dispose old background texture to prevent memory leak
+  if (scene.background && scene.background.dispose) scene.background.dispose();
+  scene.background = skyTexture;
+  
+  // Update ocean color
+  if (typeof ocean !== 'undefined' && ocean) {
+    ocean.material.color.set(theme.ocean);
+  }
+  
+  // Update arena color
+  if (arenaMesh) {
+    arenaMesh.material.color.set(theme.arena);
+  }
+  
+  addNotification(`🏔️ Arena: ${theme.name}`, 'power');
+}
 
 // Fog disabled for bright sky effect
 // scene.fog = new THREE.FogExp2(0xd0e8ff, 0.005);
@@ -454,7 +582,7 @@ const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.target.set(0, 0, 0);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.12;
-orbitControls.maxPolarAngle = Math.PI / 2.2; // Don't go below ground
+orbitControls.maxPolarAngle = Math.PI / 1.8; // Don't go below ground
 orbitControls.minDistance = 5;
 orbitControls.maxDistance = 40;
 let manualCamera = false; // True when user drags mouse
@@ -586,7 +714,7 @@ const skyMat = new THREE.ShaderMaterial({
   `
 });
 // Sky sphere disabled - using background texture instead
-// scene.add(new THREE.Mesh(skyGeo, skyMat));
+// scene.add(new THREE.Mesh(skyGeo, skyMat)); // Disabled for ocean visibility
 
 // ===== FLOATING CLOUDS =====
 const cloudGroup = new THREE.Group();
@@ -599,8 +727,8 @@ function createCloud(x, y, z, scale) {
   const puffGeo = new THREE.SphereGeometry(1, 8, 6);
   const puffMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    transparent: true,
-    opacity: 0.85,
+    transparent: false,
+    opacity: 1.0,
     roughness: 1.0,
     metalness: 0.0
   });
@@ -650,82 +778,34 @@ const ARENA_BASE_SCALE = ARENA_START_RADIUS; // GLB is ~2 units, scale to match 
 
 // Edge glow ring (kept for visual shrink indicator)
 const edgeRingGeo = new THREE.TorusGeometry(ARENA_START_RADIUS, 0.15, 8, 64);
-const edgeRingMat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff2200, emissiveIntensity: 1.5, transparent: true, opacity: 0.8 });
+const edgeRingMat = new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff2200, emissiveIntensity: 1.5, transparent: false, opacity: 0.8 });
 const edgeRing = new THREE.Mesh(edgeRingGeo, edgeRingMat);
 edgeRing.rotation.x = -Math.PI / 2;
 edgeRing.position.y = 0.05;
 scene.add(edgeRing);
 
-// Cloud ocean below arena (replacing water/lava)
-const cloudOceanGeo = new THREE.PlaneGeometry(200, 200, 32, 32);
-const cloudOceanMat = new THREE.ShaderMaterial({
-  transparent: true,
-  uniforms: {
-    uTime: { value: 0.0 }
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    varying vec3 vWorldPos;
-    void main() {
-      vUv = uv;
-      vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform float uTime;
-    varying vec2 vUv;
-    varying vec3 vWorldPos;
-
-    float hash(vec2 p) {
-      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-    }
-
-    float noise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      f = f * f * (3.0 - 2.0 * f);
-      float a = hash(i);
-      float b = hash(i + vec2(1.0, 0.0));
-      float c = hash(i + vec2(0.0, 1.0));
-      float d = hash(i + vec2(1.0, 1.0));
-      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-    }
-
-    float fbm(vec2 p) {
-      float v = 0.0;
-      float a = 0.5;
-      for (int i = 0; i < 5; i++) {
-        v += a * noise(p);
-        p *= 2.0;
-        a *= 0.5;
-      }
-      return v;
-    }
-
-    void main() {
-      vec2 uv = vUv * 8.0 + uTime * 0.01;
-      float cloud = fbm(uv);
-
-      // Cloud colors
-      vec3 cloudLight = vec3(1.0, 0.98, 0.95);
-      vec3 cloudDark = vec3(0.85, 0.88, 0.92);
-      vec3 cloudColor = mix(cloudDark, cloudLight, cloud);
-
-      // Fade at edges
-      float edgeFade = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x) *
-                       smoothstep(0.0, 0.15, vUv.y) * smoothstep(1.0, 0.85, vUv.y);
-
-      float alpha = cloud * 0.7 * edgeFade;
-
-      gl_FragColor = vec4(cloudColor, alpha);
-    }
-  `
+// ===== OCEAN BELOW ARENA =====
+const oceanGeo = new THREE.PlaneGeometry(500, 500, 64, 64);
+const oceanMat = new THREE.MeshStandardMaterial({
+  color: 0x0077be,
+  transparent: false,
+  opacity: 1.0,
+  metalness: 0.0,
+  roughness: 1.0,
+  side: THREE.FrontSide
 });
-const cloudOcean = new THREE.Mesh(cloudOceanGeo, cloudOceanMat);
-cloudOcean.rotation.x = -Math.PI / 2;
-cloudOcean.position.y = -8;
-scene.add(cloudOcean);
+
+// Add wave animation via vertex displacement
+const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.y = -5;
+scene.add(ocean);
+
+// Store original vertex positions for wave animation
+const oceanVertices = oceanGeo.attributes.position.array.slice();
+
+// Apply initial theme after ocean is created
+applyArenaTheme('blue_sky');
 
 function updateArenaVisuals() {
   const s = arenaRadius / ARENA_START_RADIUS;
@@ -1079,13 +1159,35 @@ async function loadAssets() {
   }
 
   assetsLoaded = true;
-  console.log(`Sumo ready: ${Object.keys(meshyTemplates).length} Meshy characters`);
+  console.log(`Battle Ring ready: ${Object.keys(meshyTemplates).length} Meshy characters`);
   setTimeout(() => document.getElementById('loadingScreen').classList.add('hidden'), 400);
 }
 
 // ===== ROUND STATE MACHINE =====
 // WAITING → COUNTDOWN → ACTIVE → ENDED → INTERMISSION → WAITING
 let roundState = 'WAITING';
+let waitingTimer = 0; // Timer untuk auto-add viewers
+const WAITING_TIMEOUT = 5;
+let botsEnabled = false;
+let botRespawnCount = 0;
+let botsReady = false;
+const BOT_NAMES = [
+  // Nama Indonesia populer
+  'Budi', 'Andi', 'Sari', 'Dewi', 'Rizky', 'Putri', 'Agus', 'Rina', 'Dimas', 'Lestari',
+  'Bayu', 'Citra', 'Eka', 'Fitri', 'Gilang', 'Hana', 'Irfan', 'Joko', 'Kartika', 'Lukman',
+  'Maya', 'Nanda', 'Oscar', 'Putra', 'Qori', 'Rina', 'Sinta', 'Tono', 'Ulya', 'Vina',
+  'Wawan', 'Xena', 'Yoga', 'Zahra', 'Aldi', 'Bella', 'Cahya', 'Danu', 'Eka', 'Fajar',
+  'Gita', 'Hadi', 'Indra', 'Jihan', 'Kurnia', 'Lia', 'Mega', 'Nia', 'Omar', 'Prita',
+  // Nama panggilan/gaul
+  'Abe', 'Bowo', 'Coki', 'Dede', 'Emon', 'Fafa', 'Gugun', 'Hengky', 'Iwan', 'Jeki',
+  'Koko', 'Luki', 'Memet', 'Nopal', 'Ojon', 'Pepeng', 'Rian', 'Sultan', 'Tegar', 'Ucok',
+  'Vicky', 'Wira', 'Yusuf', 'Zaki', 'Aji', 'Beni', 'Candra', 'Dwiki', 'Erik', 'Fadli',
+  // Nama karakter/fun
+  'Raja_Banteng', 'Ratu_Lebah', 'Si_Ganteng', 'Si_Cantik', 'Jagoan_Kampung',
+  'Pemain_Pro', 'Master_Gaming', 'Sultan_Battle', 'Raja_Arena', 'Dewa_Fight',
+  'Pahlawan', 'Penantang', 'Petarung', 'Juara', 'Legenda'
+];
+let botCount = 0;
 let roundTimer = 0;
 let roundNumber = 0;
 // shrinkElapsed removed — using roundTimer for linear shrink
@@ -1098,23 +1200,26 @@ function setRoundState(state) {
 
   switch (state) {
     case 'WAITING':
-      info.textContent = 'WAITING';
+      botRespawnCount = 0; // Reset respawn counter
+      info.textContent = 'MENUNGGU';
       timer.textContent = '--';
       timer.classList.remove('urgent');
-      showBanner('WAITING', `Need ${MIN_PLAYERS_TO_START} players...`);
+      showBanner('MENUNGGU', `Menunggu pemain...`);
       arenaRadius = ARENA_START_RADIUS;
       updateArenaVisuals();
+      waitingTimer = 0; // Reset timer
       break;
 
     case 'COUNTDOWN':
       roundNumber++;
       countdownValue = ROUND_COUNTDOWN;
-      info.textContent = `ROUND ${roundNumber}`;
-      showBanner(String(ROUND_COUNTDOWN), 'Get ready!');
+      info.textContent = `RONDE ${roundNumber}`;
+      showBanner(String(ROUND_COUNTDOWN), 'Bersiap!');
+      announcer.announceRoundStart(roundNumber);
       // Voice: announce round start
       const pNames = [];
       players.forEach(p => pNames.push(p.nickname));
-      queueVoiceEvent('sumo_round_start', {
+      queueVoiceEvent('battle_ring_round_start', {
         round: roundNumber,
         playerCount: players.size,
         players: pNames.slice(0, 8).join(', ')
@@ -1143,14 +1248,14 @@ function setRoundState(state) {
       break;
 
     case 'ACTIVE':
-      info.textContent = `ROUND ${roundNumber}`;
+      info.textContent = `RONDE ${roundNumber}`;
       roundTimer = ROUND_DURATION;
       hideBanner();
       showBanner('GO!', '');
       SFX.fight();
       setTimeout(hideBanner, 1500);
       // Voice: round start call
-      queueVoiceEvent('sumo_fight', {
+      queueVoiceEvent('battle_ring_fight', {
         round: roundNumber,
         playerCount: countAlivePlayers()
       }, 5);
@@ -1164,7 +1269,8 @@ function setRoundState(state) {
       if (winner) {
         winner.wins++;
         winner.score += 100;
-        showBanner(`${winner.nickname} WINS!`, `${winner.wins} win${winner.wins > 1 ? 's' : ''} — ${winner.roundKills} pts`);
+        showBanner(`${winner.nickname} MENANG!`, `${winner.wins} menang — ${winner.roundKills} poin`);
+        announcer.announceWinner(winner.nickname);
         // Teleport winner to arena center for victory dance
         winner.x = 0; winner.z = 0; winner.y = 0.25;
         winner.vx = 0; winner.vz = 0; winner.vy = 0;
@@ -1176,28 +1282,49 @@ function setRoundState(state) {
         shakeCamera(0.5);
         SFX.win();
         // Voice: winner announcement
-        queueVoiceEvent('sumo_winner', {
+        queueVoiceEvent('battle_ring_winner', {
           winner: winner.nickname,
           round: roundNumber,
           kills: winner.roundKills,
           totalWins: winner.wins
         }, 5);
-        // All losers play death animation and stay visible (dead on ground)
+        // All losers fall off the arena
         players.forEach(p => {
           if (p.uniqueId === winner.uniqueId) return;
           p.alive = false;
-          p.model.visible = true;
-          setPlayerAnim(p, 'death', 6);
-          p.punchTimer = 0; p.hitTimer = 0; // clear any timers
-        });
-      } else {
-        showBanner('DRAW!', 'No one survived...');
-        queueVoiceEvent('sumo_draw', { round: roundNumber }, 4);
-        players.forEach(p => {
-          p.alive = false;
+          p.onGround = false;
+          // Push them away from center with random direction
+          const angle = Math.random() * Math.PI * 2;
+          const force = 5 + Math.random() * 5;
+          p.vx = Math.cos(angle) * force;
+          p.vz = Math.sin(angle) * force;
+          p.vy = 2 + Math.random() * 3; // Launch up first
           p.model.visible = true;
           setPlayerAnim(p, 'death', 6);
           p.punchTimer = 0; p.hitTimer = 0;
+          // Hide after falling
+          setTimeout(() => {
+            if (p.model) p.model.visible = false;
+          }, 2000);
+        });
+      } else {
+        showBanner('SERI!', 'Tidak ada yang selamat...');
+        announcer.announceDraw();
+        queueVoiceEvent('battle_ring_draw', { round: roundNumber }, 4);
+        players.forEach(p => {
+          p.alive = false;
+          p.onGround = false;
+          const angle = Math.random() * Math.PI * 2;
+          const force = 5 + Math.random() * 5;
+          p.vx = Math.cos(angle) * force;
+          p.vz = Math.sin(angle) * force;
+          p.vy = 2 + Math.random() * 3;
+          p.model.visible = true;
+          setPlayerAnim(p, 'death', 6);
+          p.punchTimer = 0; p.hitTimer = 0;
+          setTimeout(() => {
+            if (p.model) p.model.visible = false;
+          }, 2000);
         });
       }
       break;
@@ -1205,19 +1332,142 @@ function setRoundState(state) {
 
     case 'INTERMISSION':
       roundTimer = INTERMISSION_TIME;
-      info.textContent = 'NEXT ROUND';
+      info.textContent = 'RONDE BERIKUTNYA';
       hideBanner();
       break;
   }
+}
+
+// ===== BOT SYSTEM =====
+function spawnBot() {
+  botCount++;
+  const name = BOT_NAMES[botCount % BOT_NAMES.length];
+  const botData = {
+    uniqueId: `bot_${botCount}_${Date.now()}`,
+    nickname: name,
+    profilePic: '',
+    // random character
+  };
+  createPlayer(botData);
+  addNotification(`<strong>${name}</strong> masuk arena!`, 'power');
+  return botData;
+}
+
+function spawnBots(count) {
+  const actualCount = count || (2 + Math.floor(Math.random() * 6));
+  for (let i = 0; i < actualCount; i++) {
+    setTimeout(() => spawnBot(), i * 500);
+  }
+  botsEnabled = true;
+  botsReady = true;
+  addNotification(`${actualCount} petarung masuk arena!`, 'power');
+}
+
+function removeBots() {
+  const botsToRemove = [];
+  players.forEach((p, id) => {
+    if (p.uniqueId.startsWith('bot_')) {
+      botsToRemove.push(id);
+    }
+  });
+  botsToRemove.forEach(id => {
+    removePlayer(id);
+  });
+  botsEnabled = false;
+  botCount = 0;
+  updatePlayerCount();
+  addNotification('Bot dikeluarkan!', '');
+}
+
+// Test gift function
+function testGift(tier) {
+  const alive = Array.from(players.values()).filter(p => p.alive);
+  if (alive.length === 0) {
+    addNotification('Tidak ada pemain!', '');
+    return;
+  }
+  const target = alive[Math.floor(Math.random() * alive.length)];
+  
+  const giftData = {
+    'small': { diamonds: 5, name: 'Rose' },
+    'medium': { diamonds: 50, name: 'Donut' },
+    'big': { diamonds: 200, name: 'Lion' },
+    'vip': { diamonds: 500, name: 'Whale' }
+  };
+  
+  const gift = giftData[tier] || giftData['small'];
+  handleGift({ 
+    uniqueId: target.uniqueId, 
+    nickname: target.nickname, 
+    diamondCount: gift.diamonds, 
+    giftName: gift.name, 
+    repeatCount: 1 
+  });
+  addNotification(`Test gift ${tier}: ${gift.name} (${gift.diamonds}💎)`, 'gift');
+}
+
+// Auto-logic bot bergerak
+function updateBots(dt) {
+  if (!botsEnabled) return;
+  
+  players.forEach(p => {
+    if (!p.uniqueId.startsWith('bot_') || !p.alive) return;
+    
+    // Bot bergerak acak (lebih sering)
+    if (Math.random() < 0.05) { // 5% chance per frame untuk ganti arah
+      p.targetX = (Math.random() - 0.5) * 12;
+      p.targetZ = (Math.random() - 0.5) * 12;
+    }
+    
+    // Bot pukul player lain (lebih sering)
+    if (Math.random() < 0.02) { // 2% chance per frame untuk pukul
+      const targets = Array.from(players.values()).filter(t => 
+        t.uniqueId !== p.uniqueId && t.alive
+      );
+      if (targets.length > 0) {
+        const target = targets[Math.floor(Math.random() * targets.length)];
+        const dx = target.x - p.x;
+        const dz = target.z - p.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < 4) {
+          // Bot pukul player
+          target.vx += (dx / dist) * 4;
+          target.vz += (dz / dist) * 4;
+          target.vy = 1.5;
+          target.onGround = false;
+          target.lastPushedBy = p.uniqueId;
+          setPlayerAnim(target, 'hit', 2);
+          target.hitTimer = 0.5;
+        }
+      }
+    }
+  });
 }
 
 function updateRoundState(dt) {
   switch (roundState) {
     case 'WAITING': {
       const alive = countAlivePlayers();
-      document.getElementById('roundTimer').textContent = `${alive}/${MIN_PLAYERS_TO_START}`;
+      waitingTimer += dt;
+      
       if (alive >= MIN_PLAYERS_TO_START) {
         setRoundState('COUNTDOWN');
+        waitingTimer = 0;
+      } else if (waitingTimer >= WAITING_TIMEOUT && !botsEnabled) {
+        // 5 detik habis, spawn bot
+        botsEnabled = true; // Set SEBELUM spawn supaya tidak diulang
+        spawnBots(); // async, tapi botsEnabled sudah true
+      } else if (botsReady && countAlivePlayers() >= 1) {
+        // Bot sudah siap, mulai
+        setRoundState('COUNTDOWN');
+        waitingTimer = 0;
+        botsReady = false;
+      } else if (waitingTimer >= 20) {
+        // Timeout 20 detik — force start walau bot gagal
+        setRoundState('COUNTDOWN');
+        waitingTimer = 0;
+      } else {
+        document.getElementById('roundTimer').textContent = botsEnabled ? 'Memuat...' : `Menunggu... (${Math.ceil(Math.max(0, WAITING_TIMEOUT - waitingTimer))}s)`;
       }
       break;
     }
@@ -1229,7 +1479,7 @@ function updateRoundState(dt) {
       } else {
         const v = Math.ceil(countdownValue);
         document.getElementById('roundTimer').textContent = v;
-        showBanner(String(v), v === 1 ? 'GO!' : 'Get ready!');
+        showBanner(String(v), v === 1 ? 'MAJU!' : 'Bersiap!');
         SFX.countdown();
       }
       break;
@@ -1254,17 +1504,41 @@ function updateRoundState(dt) {
           SFX.shrinkWarning();
           // Voice: shrink warning at 30s and 15s
           if (display === 30 || display === 15) {
-            queueVoiceEvent('sumo_shrink_warning', { timeLeft: display, alive: countAlivePlayers() }, 2);
+            queueVoiceEvent('battle_ring_shrink_warning', { timeLeft: display, alive: countAlivePlayers() }, 2);
           }
         }
       }
 
       // Check win condition
       const alive = countAlivePlayers();
+      const roundElapsed = ROUND_DURATION - timeLeft;
       document.getElementById('aliveCount').textContent = alive;
-      if (alive <= 1) {
-        // Last player standing — end immediately!
-        setRoundState('ENDED');
+      
+      if (alive <= 1 && roundElapsed >= MIN_ROUND_DURATION) {
+        // Last player standing — end only after minimum duration
+        if (alive === 0) {
+          // Tidak ada yang hidup — spawn bot lagi, jangan end
+          if (botRespawnCount < 5) {
+            spawnBots(1 + Math.floor(Math.random() * 4));
+            botRespawnCount++;
+          } else {
+            setRoundState('ENDED');
+          }
+        } else {
+          setRoundState('ENDED');
+        }
+      } else if (alive <= 1 && roundElapsed < MIN_ROUND_DURATION) {
+        // Still too early — spawn more bots if needed
+        if (botsEnabled && alive <= 1) {
+          const botsAlive = Array.from(players.values()).filter(p => 
+            p.uniqueId.startsWith('bot_') && p.alive
+          ).length;
+          if (botsAlive === 0 && botRespawnCount < 5) {
+            spawnBots(1 + Math.floor(Math.random() * 4));
+            botRespawnCount++;
+            addNotification('Bot tambahan masuk!', 'power');
+          }
+        }
       } else if (timeLeft <= 0) {
         // Timer ran out with multiple alive — pick winner by kills/score
         setRoundState('ENDED');
@@ -1277,9 +1551,18 @@ function updateRoundState(dt) {
       if (roundTimer <= 0) setRoundState('INTERMISSION');
       break;
 
-    case 'INTERMISSION':
+    case 'INTERMISSION': {
       roundTimer -= dt;
       document.getElementById('roundTimer').textContent = Math.ceil(Math.max(0, roundTimer));
+      
+      // Auto-ganti tema setiap 3 round
+      if (roundNumber % 3 === 0 && roundTimer <= 0) {
+        const themes = Object.keys(ARENA_THEMES);
+        const currentIndex = themes.indexOf(currentTheme);
+        const nextTheme = themes[(currentIndex + 1) % themes.length];
+        applyArenaTheme(nextTheme);
+      }
+      
       if (roundTimer <= 0) {
         if (countAlivePlayers() >= MIN_PLAYERS_TO_START || players.size >= MIN_PLAYERS_TO_START) {
           setRoundState('COUNTDOWN');
@@ -1288,6 +1571,7 @@ function updateRoundState(dt) {
         }
       }
       break;
+    }
   }
 }
 
@@ -1370,13 +1654,15 @@ async function createPlayer(viewer) {
   let _hipsRestPos = { x: 0, y: 0.85, z: 0 };
   let isMannequin = false;
   let isMeshy = false;
+  let aimArrow = null;
 
-  // Character selection: forced by "join [char]" or random hash
-  const forceChar = viewer._forceChar;
-  const meshyId = forceChar && meshyTemplates[forceChar] ? forceChar
-    : meshyIds.length > 0 ? meshyIds[hash % meshyIds.length] : null;
+  // Character selection: random antara GLB dan fallback
+    const forceChar = viewer._forceChar;
+    const useGLB = true; // 100% GLB // 30% GLB, 70% fallback humanoid // 50% chance pakai GLB, 50% pakai fallback
+    const meshyId = forceChar && meshyTemplates[forceChar] ? forceChar
+      : (useGLB && meshyIds.length > 0) ? meshyIds[hash % meshyIds.length] : null;
 
-  if (meshyId && meshyTemplates[meshyId]) {
+    if (meshyId && meshyTemplates[meshyId]) {
     // Load fresh GLB per player — browser caches the file, each gets own skeleton + bindings
     pendingPlayers.add(viewer.uniqueId);
     try {
@@ -1422,17 +1708,39 @@ async function createPlayer(viewer) {
       console.log(`Player ${viewer.uniqueId}: ${meshyId}, anims=[${Object.keys(animations)}]`);
     } catch (e) {
       console.warn('Meshy load fail:', e.message);
-      pendingPlayers.delete(viewer.uniqueId);
-      return null;
+      // Fallback: buat karakter sederhana
+      model = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color });
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), mat);
+      head.position.y = 1.5; head.castShadow = true; model.add(head);
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.4, 4, 8), mat);
+      body.position.y = 1.0; body.castShadow = true; model.add(body);
+      const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 6), mat);
+      armL.position.set(-0.3, 1.0, 0); armL.rotation.z = 0.3; model.add(armL);
+      const armR = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 6), mat);
+      armR.position.set(0.3, 1.0, 0); armR.rotation.z = -0.3; model.add(armR);
+      const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 6), mat);
+      legL.position.set(-0.1, 0.5, 0); model.add(legL);
+      const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 6), mat);
+      legR.position.set(0.1, 0.5, 0); model.add(legR);
     }
     pendingPlayers.delete(viewer.uniqueId);
   } else {
-    // Fallback box character
+    // No GLB model — buat karakter sederhana
     model = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.6, 4, 8), new THREE.MeshStandardMaterial({ color }));
-    body.position.y = 0.7; body.castShadow = true; model.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshStandardMaterial({ color }));
-    head.position.y = 1.3; head.castShadow = true; model.add(head);
+    const mat = new THREE.MeshStandardMaterial({ color });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), mat);
+    head.position.y = 1.5; head.castShadow = true; model.add(head);
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.4, 4, 8), mat);
+    body.position.y = 1.0; body.castShadow = true; model.add(body);
+    const armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 6), mat);
+    armL.position.set(-0.3, 1.0, 0); armL.rotation.z = 0.3; model.add(armL);
+    const armR = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.3, 4, 6), mat);
+    armR.position.set(0.3, 1.0, 0); armR.rotation.z = -0.3; model.add(armR);
+    const legL = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 6), mat);
+    legL.position.set(-0.1, 0.5, 0); model.add(legL);
+    const legR = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.3, 4, 6), mat);
+    legR.position.set(0.1, 0.5, 0); model.add(legR);
   }
 
   // Name label
@@ -1474,13 +1782,6 @@ async function createPlayer(viewer) {
   chatSprite.visible = false;
   model.add(chatSprite);
 
-  // Aim arrow indicator
-  const arrowGeo = new THREE.ConeGeometry(0.12, 0.4, 4);
-  arrowGeo.rotateX(Math.PI / 2);
-  const arrowMat = new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff4400, emissiveIntensity: 1 });
-  const aimArrow = new THREE.Mesh(arrowGeo, arrowMat);
-  aimArrow.position.set(0, 1.8, 0.6);
-  model.add(aimArrow);
 
   // Spawn position
   const angle = Math.random() * Math.PI * 2;
@@ -1525,7 +1826,22 @@ async function createPlayer(viewer) {
 function removePlayer(uniqueId) {
   const p = players.get(uniqueId);
   if (!p) return;
-  scene.remove(p.model);
+  // Dispose Three.js resources to prevent memory leak
+  if (p.model) {
+    // Dispose name tag canvas texture
+    if (p.nameSprite) {
+      if (p.nameSprite.material?.map) p.nameSprite.material.map.dispose();
+      if (p.nameSprite.material) p.nameSprite.material.dispose();
+    }
+    // Dispose chat bubble canvas texture
+    if (p.chatSprite) {
+      if (p.chatSprite.material?.map) p.chatSprite.material.map.dispose();
+      if (p.chatSprite.material) p.chatSprite.material.dispose();
+    }
+    // Dispose all child meshes (GLB model)
+    disposeObject(p.model);
+    scene.remove(p.model);
+  }
   players.delete(uniqueId);
   updatePlayerCount();
 }
@@ -1823,14 +2139,6 @@ function updatePhysics(dt) {
     // Face aim direction (toward nearest opponent)
     p.model.rotation.y = p.aimAngle;
 
-    // Update aim arrow
-    if (p.aimArrow) {
-      p.aimArrow.position.set(
-        Math.sin(p.aimAngle) * 0.6,
-        1.8,
-        Math.cos(p.aimAngle) * 0.6
-      );
-    }
 
     // Determine walk/run/idle anim based on velocity
     if (p.alive && p.punchTimer <= 0 && p.hitTimer <= 0) {
@@ -1896,10 +2204,12 @@ function eliminatePlayer(player) {
       killer.score += 25;
       addNotification(`<strong>${killer.nickname}</strong> pushed <strong>${player.nickname}</strong> out!`, 'out');
     } else {
-      addNotification(`<strong>${player.nickname}</strong> slipped off!`, 'out');
+      addNotification(`<strong>${player.nickname}</strong> terjatuh!`, 'out');
+    announcer.announceElimination(player.nickname);
     }
   } else {
-    addNotification(`<strong>${player.nickname}</strong> slipped off!`, 'out');
+    addNotification(`<strong>${player.nickname}</strong> terjatuh!`, 'out');
+    announcer.announceElimination(player.nickname);
   }
 
   // Splash particles + sound
@@ -1909,7 +2219,7 @@ function eliminatePlayer(player) {
 
   // Voice: elimination commentary
   const killerName = player.lastPushedBy ? players.get(player.lastPushedBy)?.nickname : null;
-  queueVoiceEvent('sumo_elimination', {
+  queueVoiceEvent('battle_ring_elimination', {
     victim: player.nickname,
     killer: killerName || null,
     remaining: countAlivePlayers()
@@ -1931,7 +2241,15 @@ async function handleLike(data) {
   const count = Math.min(data.likeCount || 1, 3);
   let p = players.get(data.uniqueId);
   if (!p) {
-    // Auto-join on first like
+    // Auto-join on first like — ganti bot jika ada
+    if (botsEnabled) {
+      const bots = Array.from(players.values()).filter(p => p.uniqueId.startsWith('bot_'));
+      if (bots.length > 0) {
+        const botToRemove = bots[0];
+        removePlayer(botToRemove.uniqueId);
+        addNotification(`🤖 ${botToRemove.nickname.replace('🤖 ', '')} digantikan oleh ${data.nickname}!`, '');
+      }
+    }
     p = await createPlayer(data);
     if (!p) return;
     SFX.join();
@@ -1940,6 +2258,9 @@ async function handleLike(data) {
 
   p.lastActive = Date.now();
   p.score += count;
+  
+  // Heart burst effect untuk like
+  spawnHeartBurst(p.x, 0, p.z);
 
   // Find nearest opponent and PUNCH them
   const { target, dist } = findNearestAlive(p);
@@ -1970,7 +2291,7 @@ async function handleLike(data) {
 
     spawnPushParticles(target.x, 1, target.z);
     SFX.punch();
-    addNotification(`<strong>${p.nickname}</strong> bumped <strong>${target.nickname}</strong>!`);
+    addNotification(`<strong>${p.nickname}</strong> menabrak <strong>${target.nickname}</strong>!`);
   } else {
     // No one in range — lunge forward
     const force = BASE_PUSH * 0.5 * count;
@@ -2005,7 +2326,7 @@ async function handleChat(data) {
       const charLabel = p._meshyId ? ` as ${p._meshyId}` : '';
       SFX.join();
       addNotification(`<strong>${p.nickname}</strong> joined${charLabel}! 🎮`, 'power');
-      queueVoiceEvent('sumo_join', { nickname: p.nickname, character: p._meshyId || null }, 1);
+      queueVoiceEvent('battle_ring_join', { nickname: p.nickname, character: p._meshyId || null }, 1);
     }
     if (!p) return;
   }
@@ -2015,6 +2336,9 @@ async function handleChat(data) {
 
   // Show chat bubble above character
   showChatBubble(p, data.comment || '');
+  
+  // 3D Chat bubble effect
+  spawnChatBubble(p.x, 0, p.z, data.comment || '💬');
 
   if (!p.alive || roundState !== 'ACTIVE') return;
 
@@ -2040,13 +2364,68 @@ async function handleChat(data) {
     p.punchTimer = getAnimDuration(p, 'dodge');
   }
   SFX.dodge();
-  addNotification(`<strong>${p.nickname}</strong> dodged!`);
+  addNotification(`<strong>${p.nickname}</strong> menghindar!`);
+}
+
+// ===== GIFT MAPPING =====
+// TikTok gift names → diamond values & effects
+const GIFT_MAP = {
+  // Small gifts (1-10 diamonds)
+  'Rose': { diamonds: 1, tier: 'small', emoji: '🌹' },
+  'Heart': { diamonds: 5, tier: 'small', emoji: '❤️' },
+  'Ice Cream Cone': { diamonds: 5, tier: 'small', emoji: '🍦' },
+  'Finger Heart': { diamonds: 5, tier: 'small', emoji: '🤏' },
+  'Corgi': { diamonds: 5, tier: 'small', emoji: '🐕' },
+  
+  // Medium gifts (10-100 diamonds)
+  'Donut': { diamonds: 15, tier: 'medium', emoji: '🍩' },
+  'Cowboy Hat': { diamonds: 25, tier: 'medium', emoji: '🤠' },
+  'Cap': { diamonds: 25, tier: 'medium', emoji: '🧢' },
+  'Sunglasses': { diamonds: 25, tier: 'medium', emoji: '🕶️' },
+  'Balloon': { diamonds: 30, tier: 'medium', emoji: '🎈' },
+  'Coffee': { diamonds: 40, tier: 'medium', emoji: '☕' },
+  'Cake': { diamonds: 50, tier: 'medium', emoji: '🎂' },
+  'Panda': { diamonds: 50, tier: 'medium', emoji: '🐼' },
+  'Star': { diamonds: 99, tier: 'medium', emoji: '⭐' },
+  
+  // Big gifts (100-500 diamonds)
+  'Lion': { diamonds: 100, tier: 'big', emoji: '🦁' },
+  'Trophy': { diamonds: 100, tier: 'big', emoji: '🏆' },
+  'Crown': { diamonds: 150, tier: 'big', emoji: '👑' },
+  'Diamond Ring': { diamonds: 200, tier: 'big', emoji: '💎' },
+  'Sports Car': { diamonds: 299, tier: 'big', emoji: '🏎️' },
+  
+  // VIP gifts (500+ diamonds)
+  'Whale': { diamonds: 500, tier: 'vip', emoji: '🐋' },
+  'Planet': { diamonds: 500, tier: 'vip', emoji: '🪐' },
+  'Universe': { diamonds: 5000, tier: 'vip', emoji: '🌌' },
+  'TikTok Universe': { diamonds: 5000, tier: 'vip', emoji: '🌌' },
+};
+
+// Get gift info by name (fallback to diamond count)
+function getGiftInfo(giftName, diamondCount) {
+  const mapped = GIFT_MAP[giftName];
+  if (mapped) return mapped;
+  
+  // Fallback: determine tier by diamond count
+  if (diamondCount >= 500) return { diamonds: diamondCount, tier: 'vip', emoji: '🌟' };
+  if (diamondCount >= 100) return { diamonds: diamondCount, tier: 'big', emoji: '✨' };
+  if (diamondCount >= 10) return { diamonds: diamondCount, tier: 'medium', emoji: '💫' };
+  return { diamonds: diamondCount || 1, tier: 'small', emoji: '⭐' };
 }
 
 async function handleGift(data) {
   let p = players.get(data.uniqueId);
   if (!p) {
-    // Auto-join on gift
+    // Auto-join on gift — ganti bot jika ada
+    if (botsEnabled) {
+      const bots = Array.from(players.values()).filter(p => p.uniqueId.startsWith('bot_'));
+      if (bots.length > 0) {
+        const botToRemove = bots[0];
+        removePlayer(botToRemove.uniqueId);
+        addNotification(`🤖 ${botToRemove.nickname.replace('🤖 ', '')} digantikan oleh ${data.nickname}!`, '');
+      }
+    }
     p = await createPlayer(data);
     if (!p) return;
     SFX.join();
@@ -2054,70 +2433,105 @@ async function handleGift(data) {
   p.lastActive = Date.now();
 
   const diamonds = data.diamondCount || 1;
+  const giftInfo = getGiftInfo(data.giftName, diamonds);
+  const giftDisplayName = data.giftName && data.giftName.length > 1 ? data.giftName : giftInfo.emoji + ' gift';
 
   if (diamonds >= 500) {
-    // VIP: METEOR SPIN — 360 spin + nuke ALL other players!
+    // VIP: METEOR SPIN — Meteor jatuh dari langit + nuke ALL players!
     p.score += 200;
-    players.forEach(other => {
-      if (other.uniqueId === p.uniqueId || !other.alive) return;
-      const dx = other.x - p.x, dz = other.z - p.z;
-      const dist = Math.sqrt(dx * dx + dz * dz) || 1;
-      const force = 14;
-      other.vx += (dx / dist) * force;
-      other.vz += (dz / dist) * force;
-      other.vy = 8;
-      other.onGround = false;
-      other.lastPushedBy = p.uniqueId;
-      setPlayerAnim(other, 'death', 5);
-      other.hitTimer = getAnimDuration(other, 'death', 4.0); other.punchTimer = 0;
-      spawnExplosion(other.x, 1, other.z);
-    });
+    
+    // Spawn 3 meteor dari langit
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => spawnMeteor(p.x, p.z), i * 300);
+    }
+    
+    // Lightning effect
+    spawnLightning(p.x, 0, p.z);
+    
+    // Setelah meteor jatuh, lempar semua pemain
+    setTimeout(() => {
+      players.forEach(other => {
+        if (other.uniqueId === p.uniqueId || !other.alive) return;
+        const dx = other.x - p.x, dz = other.z - p.z;
+        const dist = Math.sqrt(dx * dx + dz * dz) || 1;
+        const force = 14;
+        other.vx += (dx / dist) * force;
+        other.vz += (dz / dist) * force;
+        other.vy = 8;
+        other.onGround = false;
+        other.lastPushedBy = p.uniqueId;
+        setPlayerAnim(other, 'death', 5);
+        other.hitTimer = getAnimDuration(other, 'death', 4.0); other.punchTimer = 0;
+      });
+      shakeCamera(2.0);
+    }, 800); // Delay untuk efek dramatis
+    
     SFX.giftVIP();
-    addNotification(`<strong>${p.nickname}</strong> used METEOR SPIN — everyone goes flying!`, 'gift');
-    queueVoiceEvent('sumo_gift_power', { nickname: p.nickname, powerName: 'METEOR SPIN', diamonds, effect: 'Every fighter on the arena got launched into the sky!' }, 4);
+    addNotification(`☄️ <strong>${p.nickname}</strong> memanggil METEOR!`, 'gift');
     // Spin animation on gifter + bright purple aura
     if (p.alive) { setPlayerAnim(p, 'spin', 5); p.punchTimer = getAnimDuration(p, 'spin'); }
     highlightGifter(p, 0xff00ff, 4.0);
     showPowerFlash();
-    showGiftBanner(p.nickname, 'VIP METEOR SPIN', '#ff00ff', diamonds);
-    shakeCamera(1.5);
+    showGiftBanner(p.nickname, '☄️ METEOR SPIN', '#ff00ff', diamonds);
+    announcer.announceGift(p.nickname, 'METEOR SPIN', 'vip');
 
   } else if (diamonds >= 100) {
-    // BIG: SHOCKWAVE SLAM — jump + slam, AoE knockback everyone
+    // BIG: SHOCKWAVE SLAM — Tornado + Lightning + AoE knockback
     p.score += 50;
-    players.forEach(other => {
-      if (other.uniqueId === p.uniqueId || !other.alive) return;
-      const dx = other.x - p.x, dz = other.z - p.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-      if (dist < 8 && dist > 0.1) {
-        const force = 8 * (1 - dist / 8);
-        other.vx += (dx / dist) * force;
-        other.vz += (dz / dist) * force;
-        other.vy = 5;
-        other.onGround = false;
-        other.lastPushedBy = p.uniqueId;
-        if (dist < 3) {
-          setPlayerAnim(other, 'death', 4); other.hitTimer = getAnimDuration(other, 'death', 4.0);
-        } else {
-          setPlayerAnim(other, 'hit', 4); other.hitTimer = getAnimDuration(other, 'hit');
-        }
-        other.punchTimer = 0;
-      }
-    });
+    
+    // Spawn tornado di posisi pemain
+    spawnTornado(p.x, 0, p.z);
+    
+    // Lightning effect
+    spawnLightning(p.x, 0, p.z);
+    
     // Slam animation on gifter
     if (p.alive) { setPlayerAnim(p, 'slam', 4); p.punchTimer = getAnimDuration(p, 'slam'); }
     highlightGifter(p, 0xff4400, 3.0);
     spawnExplosion(p.x, 0.5, p.z);
     SFX.giftBig();
-    addNotification(`<strong>${p.nickname}</strong> used SHOCKWAVE SLAM!`, 'gift');
-    queueVoiceEvent('sumo_gift_power', { nickname: p.nickname, powerName: 'SHOCKWAVE SLAM', diamonds, effect: 'Massive ground slam that blasted everyone nearby!' }, 3);
+    
+    // Knockback semua pemain setelah delay
+    setTimeout(() => {
+      players.forEach(other => {
+        if (other.uniqueId === p.uniqueId || !other.alive) return;
+        const dx = other.x - p.x, dz = other.z - p.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < 8 && dist > 0.1) {
+          const force = 8 * (1 - dist / 8);
+          other.vx += (dx / dist) * force;
+          other.vz += (dz / dist) * force;
+          other.vy = 5;
+          other.onGround = false;
+          other.lastPushedBy = p.uniqueId;
+          if (dist < 3) {
+            setPlayerAnim(other, 'death', 4); other.hitTimer = getAnimDuration(other, 'death', 4.0);
+          } else {
+            setPlayerAnim(other, 'hit', 4); other.hitTimer = getAnimDuration(other, 'hit');
+          }
+          other.punchTimer = 0;
+        }
+      });
+      shakeCamera(1.0);
+    }, 500);
+    
+    addNotification(`🌪️ <strong>${p.nickname}</strong> memanggil TORNADO!`, 'gift');
     showPowerFlash();
-    showGiftBanner(p.nickname, 'SHOCKWAVE SLAM', '#ff4400', diamonds);
-    shakeCamera(1.0);
+    showGiftBanner(p.nickname, '🌪️ SHOCKWAVE SLAM', '#ff4400', diamonds);
+    announcer.announceGift(p.nickname, 'SHOCKWAVE SLAM', 'big');
 
   } else if (diamonds >= 11) {
-    // MEDIUM: GROUND SLAM — charge + slam one area
+    // MEDIUM: GROUND SLAM — Energy Ball + Shockwave
     p.score += 20;
+    
+    // Spawn energy ball
+    spawnEnergyBall(p.x, 0, p.z, 0xffaa00);
+    
+    // Ground slam animation on gifter
+    if (p.alive) { setPlayerAnim(p, 'groundslam', 3); p.punchTimer = getAnimDuration(p, 'groundslam'); }
+    highlightGifter(p, 0xffaa00, 2.5);
+    spawnShockwave(p.x, 0.3, p.z);
+    
     const { target: nearest, dist: nearDist } = findNearestAlive(p);
     if (nearest && nearDist < 6) {
       // Rush toward nearest + big knockback
@@ -2141,32 +2555,42 @@ async function handleGift(data) {
         }
       });
       SFX.giftMedium();
-      addNotification(`<strong>${p.nickname}</strong> used GROUND SLAM on <strong>${nearest.nickname}</strong>!`, 'gift');
+      addNotification(`⚡ <strong>${p.nickname}</strong> menyerang <strong>${nearest.nickname}</strong>!`, 'gift');
     } else {
-      addNotification(`<strong>${p.nickname}</strong> used GROUND SLAM!`, 'gift');
+      addNotification(`⚡ <strong>${p.nickname}</strong> menggunakan GROUND SLAM!`, 'gift');
     }
-    // Ground slam animation on gifter
-    if (p.alive) { setPlayerAnim(p, 'groundslam', 3); p.punchTimer = getAnimDuration(p, 'groundslam'); }
-    highlightGifter(p, 0xffaa00, 2.5);
-    spawnShockwave(p.x, 0.3, p.z);
-    showGiftBanner(p.nickname, 'GROUND SLAM', '#ffaa00', diamonds);
+    showGiftBanner(p.nickname, '⚡ GROUND SLAM', '#ffaa00', diamonds);
+    announcer.announceGift(p.nickname, 'GROUND SLAM', 'medium');
 
   } else {
-    // SMALL (1-10): POWER TANTRUM — 2x knockback for 5s + flying kick
+    // SMALL (1-10): POWER UP — Heart Burst + Energy Boost
     p.score += 5;
     p.pushPower = p.basePushPower * 2;
     setTimeout(() => { if (p) p.pushPower = p.basePushPower; }, 5000);
+    
+    // Heart burst effect
+    spawnHeartBurst(p.x, 0, p.z);
+    
     // Tantrum animation
     if (p.alive) { setPlayerAnim(p, 'tantrum', 2); p.punchTimer = getAnimDuration(p, 'tantrum', 4.0); }
     highlightGifter(p, 0x44ff44, 2.0);
     SFX.giftSmall();
-    addNotification(`<strong>${p.nickname}</strong> is POWERED UP! 2x push for 5s!`, 'power');
+    addNotification(`❤️ <strong>${p.nickname}</strong> dapat POWER UP!`, 'power');
+    announcer.announceGift(p.nickname, 'POWER UP', 'small');
   }
 }
 
 async function handleFollow(data) {
   let p = players.get(data.uniqueId);
-  if (!p) { // Auto-join on follow as a reward
+  if (!p) { // Auto-join on follow as a reward — ganti bot jika ada
+    if (botsEnabled) {
+      const bots = Array.from(players.values()).filter(p => p.uniqueId.startsWith('bot_'));
+      if (bots.length > 0) {
+        const botToRemove = bots[0];
+        removePlayer(botToRemove.uniqueId);
+        addNotification(`🤖 ${botToRemove.nickname.replace('🤖 ', '')} digantikan oleh ${data.nickname}!`, '');
+      }
+    }
     p = await createPlayer(data);
     if (p) addNotification(`<strong>${p.nickname}</strong> followed & joined! 👊`, 'power');
     if (!p) return;
@@ -2174,15 +2598,28 @@ async function handleFollow(data) {
   p.score += 10;
   p.basePushPower = Math.min(p.basePushPower * 1.3, 3.0);
   p.pushPower = p.basePushPower;
+  
+  // Star burst effect untuk follow
+  spawnStarBurst(p.x, 0, p.z);
+  
   // Tantrum flex animation
   if (p.alive && p.punchTimer <= 0) { setPlayerAnim(p, 'tantrum', 2); p.punchTimer = getAnimDuration(p, 'tantrum', 4.0); }
-  addNotification(`<strong>${p.nickname}</strong> followed! +30% POWER!`, 'power');
+  addNotification(`⭐ <strong>${p.nickname}</strong> followed! +30% POWER!`, 'power');
+  announcer.announce(`${p.nickname} follow! Kekuatan naik!`);
 }
 
 async function handleShare(data) {
   let p = players.get(data.uniqueId);
   if (!p) {
-    // Auto-join on share
+    // Auto-join on share — ganti bot jika ada
+    if (botsEnabled) {
+      const bots = Array.from(players.values()).filter(p => p.uniqueId.startsWith('bot_'));
+      if (bots.length > 0) {
+        const botToRemove = bots[0];
+        removePlayer(botToRemove.uniqueId);
+        addNotification(`🤖 ${botToRemove.nickname.replace('🤖 ', '')} digantikan oleh ${data.nickname}!`, '');
+      }
+    }
     p = await createPlayer(data);
     if (!p) return;
     SFX.join();
@@ -2190,9 +2627,13 @@ async function handleShare(data) {
   p.score += 5;
   p.speedBoost = 3;
   p.shieldHits = Math.max(p.shieldHits, 1);
+  
+  // Shield pulse effect untuk share
+  spawnShieldPulse(p.x, 0, p.z);
+  
   // Block/shield animation
   if (p.alive && p.punchTimer <= 0) { setPlayerAnim(p, 'block', 2); p.punchTimer = getAnimDuration(p, 'block'); }
-  addNotification(`<strong>${p.nickname}</strong> shared! Speed + Shield!`, 'power');
+  addNotification(`🛡️ <strong>${p.nickname}</strong> shared! Speed + Perisai!`, 'power');
 }
 
 function getLeader() {
@@ -2267,25 +2708,76 @@ function showGiftBanner(nickname, tierName, tierColor, diamonds) {
     banner.style.cssText = `
       position:absolute; top:0; left:0; width:100%; height:100%;
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      pointer-events:none; z-index:200; opacity:0; transition:opacity 0.3s;
+      pointer-events:none; z-index:200; opacity:0; transition:opacity 0.5s;
     `;
     banner.innerHTML = `
-      <div id="giftTier" style="font-size:14px;font-weight:900;letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;"></div>
-      <div id="giftUser" style="font-size:24px;font-weight:900;text-shadow:0 0 20px rgba(0,0,0,0.8);"></div>
-      <div id="giftDiamonds" style="font-size:12px;margin-top:4px;opacity:0.8;"></div>
+      <div id="giftOverlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
+      <div id="giftParticles" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;"></div>
+      <div style="position:relative;z-index:1;text-align:center;">
+        <div id="giftEmoji" style="font-size:64px;margin-bottom:10px;animation:giftPulse 0.5s ease-in-out;"></div>
+        <div id="giftTier" style="font-size:16px;font-weight:900;letter-spacing:6px;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 20px ${tierColor};"></div>
+        <div id="giftUser" style="font-size:32px;font-weight:900;text-shadow:0 0 30px rgba(0,0,0,0.9);margin-bottom:8px;"></div>
+        <div id="giftDiamonds" style="font-size:18px;opacity:0.9;text-shadow:0 0 10px rgba(0,0,0,0.8);"></div>
+      </div>
+      <style>
+        @keyframes giftPulse {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes giftParticle {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+      </style>
     `;
     document.querySelector('.game-frame').appendChild(banner);
   }
+  
+  // Emoji berdasarkan tier
+  const emojiMap = {
+    'vip': '☄️',
+    'big': '🌪️',
+    'medium': '⚡',
+    'small': '❤️'
+  };
+  const tierKey = tierName.toLowerCase().includes('meteor') ? 'vip' : 
+                  tierName.toLowerCase().includes('tornado') ? 'big' :
+                  tierName.toLowerCase().includes('ground') ? 'medium' : 'small';
+  
+  document.getElementById('giftEmoji').textContent = emojiMap[tierKey] || '🎁';
   document.getElementById('giftTier').textContent = tierName;
   document.getElementById('giftTier').style.color = tierColor;
+  document.getElementById('giftTier').style.textShadow = `0 0 20px ${tierColor}`;
   document.getElementById('giftUser').textContent = nickname;
   document.getElementById('giftUser').style.color = '#fff';
   document.getElementById('giftDiamonds').textContent = `${diamonds} diamonds`;
   document.getElementById('giftDiamonds').style.color = tierColor;
+  
+  // Particle effect
+  const particlesEl = document.getElementById('giftParticles');
+  particlesEl.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div');
+    particle.style.cssText = `
+      position:absolute;
+      left:${Math.random() * 100}%;
+      bottom:-10px;
+      width:${4 + Math.random() * 8}px;
+      height:${4 + Math.random() * 8}px;
+      background:${tierColor};
+      border-radius:50%;
+      animation:giftParticle ${1 + Math.random() * 2}s linear forwards;
+      animation-delay:${Math.random() * 0.5}s;
+      opacity:0.8;
+    `;
+    particlesEl.appendChild(particle);
+  }
+  
   banner.style.opacity = '1';
-  banner.style.background = `radial-gradient(ellipse at center, ${tierColor}44 0%, transparent 70%)`;
+  banner.style.background = `radial-gradient(ellipse at center, ${tierColor}33 0%, transparent 70%)`;
   clearTimeout(banner._timer);
-  banner._timer = setTimeout(() => { banner.style.opacity = '0'; }, 2500);
+  banner._timer = setTimeout(() => { banner.style.opacity = '0'; }, 3000);
 }
 
 // ===== GIFTER HIGHLIGHT — glowing aura so you can see who did it =====
@@ -2294,7 +2786,7 @@ function highlightGifter(player, color, duration) {
   // Add a glowing sphere around the gifter
   const auraGeo = new THREE.SphereGeometry(1.2, 16, 12);
   const auraMat = new THREE.MeshBasicMaterial({
-    color: color, transparent: true, opacity: 0.4, side: THREE.BackSide
+    color: color, transparent: false, opacity: 0.4, side: THREE.BackSide
   });
   const aura = new THREE.Mesh(auraGeo, auraMat);
   aura.position.y = 0.8;
@@ -2316,6 +2808,31 @@ function highlightGifter(player, color, duration) {
 }
 
 // ===== PARTICLES =====
+// ===== MEMORY MANAGEMENT: Dispose helper =====
+function disposeObject(obj) {
+  if (!obj) return;
+  // If it's a Group or has children, traverse all
+  if (obj.traverse) {
+    obj.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+        } else {
+          if (child.material.map) child.material.map.dispose();
+          child.material.dispose();
+        }
+      }
+    });
+  }
+  // Direct dispose for non-traversable objects
+  if (obj.geometry) obj.geometry.dispose();
+  if (obj.material) {
+    if (obj.material.map) obj.material.map.dispose();
+    obj.material.dispose();
+  }
+}
+
 const particles = [];
 
 function spawnPushParticles(x, y, z) {
@@ -2377,12 +2894,322 @@ function spawnExplosion(x, y, z) {
 function spawnShockwave(x, y, z) {
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(0.5, 0.1, 8, 32),
-    new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff6600, emissiveIntensity: 2, transparent: true, opacity: 1 })
+    new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff6600, emissiveIntensity: 2, transparent: false, opacity: 1 })
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.set(x, y, z);
   scene.add(ring);
   particles.push({ mesh: ring, vx: 0, vy: 0, vz: 0, life: 0.8, isRing: true, ringScale: 0.5 });
+}
+
+// ===== EFEK METEOR =====
+function spawnMeteor(x, z) {
+  // Meteor jatuh dari langit
+  const meteorGeo = new THREE.SphereGeometry(0.8, 8, 6);
+  const meteorMat = new THREE.MeshStandardMaterial({ 
+    color: 0xff4400, 
+    emissive: 0xff2200, 
+    emissiveIntensity: 3 
+  });
+  const meteor = new THREE.Mesh(meteorGeo, meteorMat);
+  meteor.position.set(x + (Math.random() - 0.5) * 10, 50, z + (Math.random() - 0.5) * 10);
+  scene.add(meteor);
+  
+  // Api trail
+  const trailGeo = new THREE.ConeGeometry(0.3, 2, 6);
+  const trailMat = new THREE.MeshStandardMaterial({ 
+    color: 0xff6600, 
+    emissive: 0xff4400, 
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.8
+  });
+  const trail = new THREE.Mesh(trailGeo, trailMat);
+  trail.rotation.x = Math.PI;
+  meteor.add(trail);
+  
+  // Tambahkan ke particles untuk animasi
+  particles.push({
+    mesh: meteor,
+    vx: 0,
+    vy: -30, // Kecepatan jatuh
+    vz: 0,
+    life: 2.0,
+    isMeteor: true,
+    targetX: x,
+    targetZ: z,
+    exploded: false
+  });
+}
+
+// ===== EFEK LIGHTNING =====
+function spawnLightning(x, y, z) {
+  const points = [];
+  let currentX = x;
+  let currentY = y + 20;
+  let currentZ = z;
+  
+  // Buat jalur petir
+  for (let i = 0; i < 10; i++) {
+    points.push(new THREE.Vector3(currentX, currentY, currentZ));
+    currentX += (Math.random() - 0.5) * 2;
+    currentY -= 2;
+    currentZ += (Math.random() - 0.5) * 2;
+  }
+  points.push(new THREE.Vector3(x, y, z));
+  
+  const lightningGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lightningMat = new THREE.LineBasicMaterial({ 
+    color: 0x44aaff, 
+    linewidth: 3,
+    transparent: true,
+    opacity: 1
+  });
+  const lightning = new THREE.Line(lightningGeo, lightningMat);
+  scene.add(lightning);
+  
+  particles.push({
+    mesh: lightning,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    life: 0.3,
+    isLightning: true
+  });
+  
+  // Glow effect
+  const glowGeo = new THREE.SphereGeometry(1.5, 8, 6);
+  const glowMat = new THREE.MeshStandardMaterial({ 
+    color: 0x44aaff, 
+    emissive: 0x2288ff, 
+    emissiveIntensity: 3,
+    transparent: true,
+    opacity: 0.6
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.set(x, y + 1, z);
+  scene.add(glow);
+  
+  particles.push({
+    mesh: glow,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    life: 0.5,
+    isGlow: true
+  });
+}
+
+// ===== EFEK TORNADO =====
+function spawnTornado(x, y, z) {
+  const tornadoGroup = new THREE.Group();
+  tornadoGroup.position.set(x, y, z);
+  scene.add(tornadoGroup);
+  
+  // Buat beberapa ring untuk tornado
+  for (let i = 0; i < 8; i++) {
+    const ringGeo = new THREE.TorusGeometry(0.5 + i * 0.3, 0.05, 6, 16);
+    const ringMat = new THREE.MeshStandardMaterial({ 
+      color: 0x88aacc, 
+      emissive: 0x668899, 
+      emissiveIntensity: 1,
+      transparent: true,
+      opacity: 0.6 - i * 0.05
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.y = i * 0.5;
+    ring.rotation.x = Math.PI / 2;
+    tornadoGroup.add(ring);
+  }
+  
+  particles.push({
+    mesh: tornadoGroup,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    life: 3.0,
+    isTornado: true,
+    spinSpeed: 5
+  });
+}
+
+// ===== EFEK ENERGY BALL =====
+function spawnEnergyBall(x, y, z, color) {
+  const ballGeo = new THREE.SphereGeometry(0.5, 12, 8);
+  const ballMat = new THREE.MeshStandardMaterial({ 
+    color: color, 
+    emissive: color, 
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.8
+  });
+  const ball = new THREE.Mesh(ballGeo, ballMat);
+  ball.position.set(x, y + 1, z);
+  scene.add(ball);
+  
+  // Orbiting particles
+  for (let i = 0; i < 6; i++) {
+    const orbitGeo = new THREE.SphereGeometry(0.1, 4, 3);
+    const orbitMat = new THREE.MeshStandardMaterial({ 
+      color: 0xffffff, 
+      emissive: color, 
+      emissiveIntensity: 2 
+    });
+    const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+    ball.add(orbit);
+    
+    const angle = (i / 6) * Math.PI * 2;
+    orbit.position.set(Math.cos(angle) * 1.5, 0, Math.sin(angle) * 1.5);
+  }
+  
+  particles.push({
+    mesh: ball,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    life: 2.0,
+    isEnergyBall: true,
+    spinSpeed: 3
+  });
+}
+
+// ===== EFEK LIKE (HEART BURST) =====
+function spawnHeartBurst(x, y, z) {
+  for (let i = 0; i < 12; i++) {
+    const heartShape = new THREE.Shape();
+    heartShape.moveTo(0, 0.3);
+    heartShape.bezierCurveTo(0, 0.5, 0.2, 0.5, 0.2, 0.3);
+    heartShape.bezierCurveTo(0.2, 0.1, 0, 0.1, 0, 0.3);
+    heartShape.bezierCurveTo(0, 0.1, -0.2, 0.1, -0.2, 0.3);
+    heartShape.bezierCurveTo(-0.2, 0.5, 0, 0.5, 0, 0.3);
+    
+    const heartGeo = new THREE.ShapeGeometry(heartShape);
+    const heartMat = new THREE.MeshStandardMaterial({ 
+      color: 0xff4466, 
+      emissive: 0xff2244, 
+      emissiveIntensity: 2,
+      side: THREE.DoubleSide
+    });
+    const heart = new THREE.Mesh(heartGeo, heartMat);
+    heart.position.set(x + (Math.random() - 0.5) * 2, y + Math.random() * 2, z + (Math.random() - 0.5) * 2);
+    heart.scale.set(0.3, 0.3, 0.3);
+    scene.add(heart);
+    
+    particles.push({
+      mesh: heart,
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 3 + 1,
+      vz: (Math.random() - 0.5) * 3,
+      life: 1.5 + Math.random(),
+      spin: true
+    });
+  }
+}
+
+// ===== EFEK COMMENT (CHAT BUBBLE) =====
+function spawnChatBubble(x, y, z, text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  
+  // Background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.roundRect(10, 10, 236, 108, 20);
+  ctx.fill();
+  
+  // Text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 32px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(text || '💬', 128, 75);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  const spriteMat = new THREE.SpriteMaterial({ 
+    map: texture, 
+    transparent: true,
+    depthTest: false
+  });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.position.set(x, y + 2, z);
+  sprite.scale.set(2, 1, 1);
+  scene.add(sprite);
+  
+  particles.push({
+    mesh: sprite,
+    vx: (Math.random() - 0.5) * 2,
+    vy: 2,
+    vz: (Math.random() - 0.5) * 2,
+    life: 2.0,
+    isSprite: true
+  });
+}
+
+// ===== EFEK FOLLOW (STAR BURST) =====
+function spawnStarBurst(x, y, z) {
+  for (let i = 0; i < 8; i++) {
+    const starShape = new THREE.Shape();
+    const outerRadius = 0.3;
+    const innerRadius = 0.12;
+    const spikes = 5;
+    
+    for (let j = 0; j < spikes * 2; j++) {
+      const radius = j % 2 === 0 ? outerRadius : innerRadius;
+      const angle = (j / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+      if (j === 0) starShape.moveTo(px, py);
+      else starShape.lineTo(px, py);
+    }
+    starShape.closePath();
+    
+    const starGeo = new THREE.ShapeGeometry(starShape);
+    const starMat = new THREE.MeshStandardMaterial({ 
+      color: 0xffcc00, 
+      emissive: 0xffaa00, 
+      emissiveIntensity: 2,
+      side: THREE.DoubleSide
+    });
+    const star = new THREE.Mesh(starGeo, starMat);
+    star.position.set(x + (Math.random() - 0.5) * 3, y + Math.random() * 3, z + (Math.random() - 0.5) * 3);
+    star.scale.set(0.5, 0.5, 0.5);
+    scene.add(star);
+    
+    particles.push({
+      mesh: star,
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 4 + 2,
+      vz: (Math.random() - 0.5) * 4,
+      life: 1.8 + Math.random(),
+      spin: true
+    });
+  }
+}
+
+// ===== EFEK SHARE (SHIELD PULSE) =====
+function spawnShieldPulse(x, y, z) {
+  const shieldGeo = new THREE.SphereGeometry(2, 16, 12);
+  const shieldMat = new THREE.MeshStandardMaterial({ 
+    color: 0x44aaff, 
+    emissive: 0x2288ff, 
+    emissiveIntensity: 2,
+    transparent: true,
+    opacity: 0.4,
+    wireframe: true
+  });
+  const shield = new THREE.Mesh(shieldGeo, shieldMat);
+  shield.position.set(x, y + 1, z);
+  scene.add(shield);
+  
+  particles.push({
+    mesh: shield,
+    vx: 0,
+    vy: 0,
+    vz: 0,
+    life: 2.0,
+    isShield: true,
+    expandSpeed: 2
+  });
 }
 
 function spawnConfetti(x, y, z) {
@@ -2412,14 +3239,78 @@ function updateParticles(dt) {
     p.life -= dt;
     if (p.life <= 0) {
       scene.remove(p.mesh);
+      disposeObject(p.mesh);
       particles.splice(i, 1);
       continue;
     }
+    
+    // Ring expand
     if (p.isRing) {
       p.ringScale += dt * 12;
       p.mesh.scale.set(p.ringScale, p.ringScale, 1);
       p.mesh.material.opacity = Math.max(0, p.life / 0.8);
-    } else {
+    }
+    // Meteor jatuh
+    else if (p.isMeteor) {
+      p.mesh.position.y += p.vy * dt;
+      p.mesh.rotation.x += dt * 10;
+      p.mesh.rotation.z += dt * 8;
+      
+      // Explode saat menyentuh tanah
+      if (p.mesh.position.y <= 0.5 && !p.exploded) {
+        p.exploded = true;
+        spawnExplosion(p.mesh.position.x, 0.5, p.mesh.position.z);
+        spawnShockwave(p.mesh.position.x, 0.3, p.mesh.position.z);
+        shakeCamera(1.0);
+        // Hapus meteor
+        scene.remove(p.mesh);
+        disposeObject(p.mesh);
+        particles.splice(i, 1);
+        continue;
+      }
+      p.mesh.material.opacity = Math.min(1, p.life);
+    }
+    // Lightning
+    else if (p.isLightning) {
+      p.mesh.material.opacity = Math.max(0, p.life / 0.3);
+    }
+    // Glow
+    else if (p.isGlow) {
+      p.mesh.scale.set(1 + (0.5 - p.life) * 2, 1 + (0.5 - p.life) * 2, 1 + (0.5 - p.life) * 2);
+      p.mesh.material.opacity = Math.max(0, p.life / 0.5);
+    }
+    // Tornado
+    else if (p.isTornado) {
+      p.mesh.rotation.y += dt * p.spinSpeed;
+      p.mesh.children.forEach((child, idx) => {
+        child.rotation.z += dt * (idx + 1) * 0.5;
+        child.position.y = idx * 0.5 + Math.sin(Date.now() * 0.003 + idx) * 0.2;
+      });
+      p.mesh.material.opacity = Math.max(0, p.life / 3.0);
+    }
+    // Energy Ball
+    else if (p.isEnergyBall) {
+      p.mesh.rotation.y += dt * p.spinSpeed;
+      p.mesh.children.forEach((child, idx) => {
+        const angle = Date.now() * 0.005 + (idx / 6) * Math.PI * 2;
+        child.position.set(Math.cos(angle) * 1.5, 0, Math.sin(angle) * 1.5);
+      });
+      p.mesh.material.opacity = Math.max(0, p.life / 2.0);
+    }
+    // Shield
+    else if (p.isShield) {
+      p.mesh.scale.x += dt * p.expandSpeed;
+      p.mesh.scale.y += dt * p.expandSpeed;
+      p.mesh.scale.z += dt * p.expandSpeed;
+      p.mesh.material.opacity = Math.max(0, p.life / 2.0);
+    }
+    // Sprite (chat bubble)
+    else if (p.isSprite) {
+      p.mesh.position.y += p.vy * dt;
+      p.mesh.material.opacity = Math.max(0, p.life / 2.0);
+    }
+    // Default physics
+    else {
       p.vy -= 8 * dt;
       p.mesh.position.x += p.vx * dt;
       p.mesh.position.y += p.vy * dt;
@@ -2458,6 +3349,14 @@ let cameraShakeTimer = 0;
 let autoCamEnabled = true; // AFK auto camera — on by default
 let autoCamFocusTimer = 0; // Timer for switching focus points
 let autoCamTarget = { x: 0, z: 0 }; // Current focus point
+let cameraMode = 'dramatic'; // Current camera mode — dramatic lebih sering
+let cameraModeTimer = 0; // Timer for switching modes
+const CAMERA_MODES = [
+  'dramatic', 'dramatic', 'dramatic', 'dramatic', 'dramatic', // 50% dramatic
+  'orbit', 'follow', 'cinematic', 'low_orbit'
+];
+let cameraModeIndex = 0;
+let cameraAngleSpeed = 0.15; // Kecepatan rotasi kamera
 
 function findClosestFight() {
   // Find the two closest alive players — that's where the action is
@@ -2494,8 +3393,8 @@ function updateCamera(dt) {
     const targetZ = fp.z + Math.cos(cameraOrbitAngle * 1.5) * orbitDist;
     const targetY = 2.5;
     const lookTarget = new THREE.Vector3(fp.x, 1.0, fp.z);
-    camera.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), dt * 4);
-    orbitControls.target.lerp(lookTarget, dt * 4);
+    camera.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), dt * 2);
+    orbitControls.target.lerp(lookTarget, dt * 2);
     return;
   }
 
@@ -2509,35 +3408,162 @@ function updateCamera(dt) {
       const targetZ = winner.z + Math.cos(cameraOrbitAngle) * orbitDist;
       const targetY = 1.8;
       const lookTarget = new THREE.Vector3(winner.x, 1.0, winner.z);
-      camera.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), dt * 4);
-      orbitControls.target.lerp(lookTarget, dt * 4);
+      camera.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), dt * 2);
+      orbitControls.target.lerp(lookTarget, dt * 2);
       return;
     }
   }
 
-  // AFK Auto Camera — slowly orbit arena, focus on fights during ACTIVE
+  // AFK Auto Camera — dengan variasi mode
   if (autoCamEnabled && !focusCamEnabled) {
-    cameraOrbitAngle += dt * 0.15; // slow orbit speed
+    // Rotasi kamera selalu bergerak
+    cameraAngleSpeed = 0.1 + Math.sin(Date.now() * 0.001) * 0.1; // Bervariasi
+    cameraOrbitAngle += dt * cameraAngleSpeed;
+    
+    // Ganti mode kamera setiap 5-10 detik (lebih sering)
+    cameraModeTimer -= dt;
+    if (cameraModeTimer <= 0 && roundState === 'ACTIVE') {
+      cameraModeTimer = 8 + Math.random() * 7;
+      cameraModeIndex = Math.floor(Math.random() * CAMERA_MODES.length); // Random mode
+      cameraMode = CAMERA_MODES[cameraModeIndex];
+      addNotification(`📷 ${cameraMode}`, '');
+    }
 
     if (roundState === 'ACTIVE') {
-      // Periodically switch focus to where action is
+      // Focus on fight
       autoCamFocusTimer -= dt;
       if (autoCamFocusTimer <= 0) {
-        autoCamFocusTimer = 3 + Math.random() * 2; // switch every 3-5s
+        autoCamFocusTimer = 3 + Math.random() * 2;
         const fight = findClosestFight();
         autoCamTarget.x = fight.x;
         autoCamTarget.z = fight.z;
       }
-      // Dynamic height/distance based on arena size
-      const camDist = Math.max(8, arenaRadius * 1.1);
-      const camHeight = Math.max(10, arenaRadius * 0.8);
-      const targetX = autoCamTarget.x + Math.sin(cameraOrbitAngle) * camDist;
-      const targetZ = autoCamTarget.z + Math.cos(cameraOrbitAngle) * camDist;
-      const lookTarget = new THREE.Vector3(autoCamTarget.x, 0.5, autoCamTarget.z);
+      
+      // Camera modes dengan variasi
+      let camDist, camHeight, targetX, targetZ, lookTarget;
+      
+      switch (cameraMode) {
+        case 'orbit':
+          // Orbit normal
+          camDist = Math.max(8, arenaRadius * 1.1);
+          camHeight = Math.max(10, arenaRadius * 0.8);
+          targetX = autoCamTarget.x + Math.sin(cameraOrbitAngle) * camDist;
+          targetZ = autoCamTarget.z + Math.cos(cameraOrbitAngle) * camDist;
+          lookTarget = new THREE.Vector3(autoCamTarget.x, 0.5, autoCamTarget.z);
+          break;
+          
+        case 'topdown':
+          // Pandangan dari atas
+          camDist = Math.max(5, arenaRadius * 0.4);
+          camHeight = Math.max(20, arenaRadius * 1.5);
+          targetX = autoCamTarget.x + Math.sin(cameraOrbitAngle * 0.5) * camDist;
+          targetZ = autoCamTarget.z + Math.cos(cameraOrbitAngle * 0.5) * camDist;
+          lookTarget = new THREE.Vector3(autoCamTarget.x, 0, autoCamTarget.z);
+          break;
+          
+        case 'dramatic':
+          // Angle dramatis (rendah, dekat)
+          camDist = Math.max(6, arenaRadius * 0.7);
+          camHeight = Math.max(3, arenaRadius * 0.3);
+          targetX = autoCamTarget.x + Math.sin(cameraOrbitAngle * 1.5) * camDist;
+          targetZ = autoCamTarget.z + Math.cos(cameraOrbitAngle * 1.5) * camDist;
+          lookTarget = new THREE.Vector3(autoCamTarget.x, 1.5, autoCamTarget.z);
+          break;
+          
+        case 'follow':
+          // Ikut pemain terdekat
+          const alive = Array.from(players.values()).filter(p => p.alive);
+          if (alive.length > 0) {
+            const closest = alive[Math.floor(Math.random() * alive.length)];
+            camDist = 5;
+            camHeight = 3;
+            targetX = closest.x + Math.sin(cameraOrbitAngle * 2) * camDist;
+            targetZ = closest.z + Math.cos(cameraOrbitAngle * 2) * camDist;
+            lookTarget = new THREE.Vector3(closest.x, 1.0, closest.z);
+          } else {
+            camDist = 14; camHeight = 16;
+            targetX = Math.sin(cameraOrbitAngle) * camDist;
+            targetZ = Math.cos(cameraOrbitAngle) * camDist;
+            lookTarget = new THREE.Vector3(0, 0.5, 0);
+          }
+          break;
+          
+        case 'cinematic':
+          // Cinematic wide shot
+          camDist = Math.max(15, arenaRadius * 1.5);
+          camHeight = Math.max(12, arenaRadius * 1.0);
+          targetX = Math.sin(cameraOrbitAngle * 0.3) * camDist;
+          targetZ = Math.cos(cameraOrbitAngle * 0.3) * camDist;
+          lookTarget = new THREE.Vector3(0, 0.5, 0);
+          break;
+          
+        case 'low_orbit':
+          // Orbit rendah (dekat permukaan)
+          camDist = Math.max(6, arenaRadius * 0.6);
+          camHeight = Math.max(4, arenaRadius * 0.4);
+          targetX = autoCamTarget.x + Math.sin(cameraOrbitAngle * 1.2) * camDist;
+          targetZ = autoCamTarget.z + Math.cos(cameraOrbitAngle * 1.2) * camDist;
+          lookTarget = new THREE.Vector3(autoCamTarget.x, 1.0, autoCamTarget.z);
+          break;
+          
+        case 'high_orbit':
+          // Orbit tinggi (burung)
+          camDist = Math.max(10, arenaRadius * 0.8);
+          camHeight = Math.max(25, arenaRadius * 2.0);
+          targetX = Math.sin(cameraOrbitAngle * 0.4) * camDist;
+          targetZ = Math.cos(cameraOrbitAngle * 0.4) * camDist;
+          lookTarget = new THREE.Vector3(0, 0, 0);
+          break;
+          
+        case 'close_follow':
+          // Ikut sangat dekat (over shoulder)
+          const closeAlive = Array.from(players.values()).filter(p => p.alive);
+          if (closeAlive.length > 0) {
+            const target = closeAlive[Math.floor(Math.random() * closeAlive.length)];
+            camDist = 3;
+            camHeight = 2;
+            targetX = target.x + Math.sin(cameraOrbitAngle * 3) * camDist;
+            targetZ = target.z + Math.cos(cameraOrbitAngle * 3) * camDist;
+            lookTarget = new THREE.Vector3(target.x, 1.5, target.z);
+          } else {
+            camDist = 14; camHeight = 16;
+            targetX = Math.sin(cameraOrbitAngle) * camDist;
+            targetZ = Math.cos(cameraOrbitAngle) * camDist;
+            lookTarget = new THREE.Vector3(0, 0.5, 0);
+          }
+          break;
+          
+        case 'wide_shot':
+          // Shot sangat lebar (panorama)
+          camDist = Math.max(20, arenaRadius * 2.0);
+          camHeight = Math.max(15, arenaRadius * 1.2);
+          targetX = Math.sin(cameraOrbitAngle * 0.2) * camDist;
+          targetZ = Math.cos(cameraOrbitAngle * 0.2) * camDist;
+          lookTarget = new THREE.Vector3(0, 0, 0);
+          break;
+          
+        case 'dynamic':
+          // Dynamic: campuran semua, berubah-ubah
+          const dynAngle = cameraOrbitAngle * (0.5 + Math.sin(Date.now() * 0.002) * 0.5);
+          const dynHeight = 8 + Math.sin(Date.now() * 0.003) * 8;
+          const dynDist = 10 + Math.sin(Date.now() * 0.001) * 5;
+          targetX = autoCamTarget.x + Math.sin(dynAngle) * dynDist;
+          targetZ = autoCamTarget.z + Math.cos(dynAngle) * dynDist;
+          camHeight = dynHeight;
+          lookTarget = new THREE.Vector3(autoCamTarget.x, 0.5, autoCamTarget.z);
+          break;
+          
+        default:
+          camDist = 14; camHeight = 16;
+          targetX = Math.sin(cameraOrbitAngle) * camDist;
+          targetZ = Math.cos(cameraOrbitAngle) * camDist;
+          lookTarget = new THREE.Vector3(0, 0.5, 0);
+      }
+      
       camera.position.lerp(new THREE.Vector3(targetX, camHeight, targetZ), dt * 1.5);
       orbitControls.target.lerp(lookTarget, dt * 1.5);
     } else {
-      // WAITING / COUNTDOWN / INTERMISSION — gentle wide orbit around center
+      // WAITING / COUNTDOWN / INTERMISSION
       const camDist = 14;
       const camHeight = 16;
       const targetX = Math.sin(cameraOrbitAngle) * camDist;
@@ -2562,21 +3588,19 @@ function updateAutoPlay(dt) {
   autoTimer -= dt;
   if (autoTimer <= 0) {
     autoTimer = 0.3 + Math.random() * 0.5;
-    // Random action on random alive player
+    // Random action on random alive player (TANPA gift palsu)
     const alive = Array.from(players.values()).filter(p => p.alive);
     if (alive.length === 0) return;
     const target = alive[Math.floor(Math.random() * alive.length)];
     const action = Math.random();
-    if (action < 0.6) {
+    if (action < 0.7) {
       // Push
       handleLike({ uniqueId: target.uniqueId, nickname: target.nickname, likeCount: 1 });
-    } else if (action < 0.85) {
-      // Rotate aim
-      handleChat({ uniqueId: target.uniqueId, nickname: target.nickname, comment: '' });
     } else {
-      // Small gift
-      handleGift({ uniqueId: target.uniqueId, nickname: target.nickname, diamondCount: Math.random() < 0.3 ? 10 : 1, giftName: 'Rose', repeatCount: 1 });
+      // Chat/dodge
+      handleChat({ uniqueId: target.uniqueId, nickname: target.nickname, comment: '' });
     }
+    // Gift HANYA dari TikTok asli, bukan auto-play
   }
 }
 
@@ -2697,6 +3721,7 @@ function connectSocket() {
   ioScript.src = '/socket.io/socket.io.js';
   ioScript.onload = () => {
     socket = io({ query: { room: ROOM } });
+    window.socket = socket;
 
     socket.on('like', (data) => {
       handleLike(data);
@@ -2718,21 +3743,30 @@ function connectSocket() {
       handleShare(data);
     });
 
+    socket.on('social', (data) => {
+      // Handle social events (follow/share fallback in v2.x)
+      if (data.displayType?.includes('follow')) handleFollow(data);
+      if (data.displayType?.includes('share')) handleShare(data);
+    });
+
     socket.on('viewer-join', async (data) => {
-      // Auto-join: create player when viewer enters the live
-      if (!players.has(data.uniqueId) && !pendingPlayers.has(data.uniqueId)) {
-        const p = await createPlayer(data);
-        if (p) {
-          SFX.join();
-          queueVoiceEvent('sumo_join', { nickname: p.nickname, character: p._meshyId || null }, 1);
-        }
-      }
-      // Track for voice greeting
+      // Viewer masuk live — tapi JANGAN auto-join sebagai pemain
+      // Viewer hanya jadi pemain saat interaksi (like, gift, comment, dll)
+      // Track untuk voice greeting saja
       handleViewerJoin(data);
     });
 
     socket.on('room-stats', (data) => {
       // Could display viewer count
+    });
+
+    socket.on('connection-status', (data) => {
+      console.log('Connection status:', data);
+      if (data.connected) {
+        addNotification(`Live terhubung! Room: ${data.roomId}`, 'power');
+      } else if (data.error) {
+        addNotification(`Koneksi: ${data.error}`, '');
+      }
     });
 
     console.log('Socket connected, room:', ROOM || '(default)');
@@ -2750,6 +3784,7 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05);
 
   updateRoundState(dt);
+  updateBots(dt);
   updatePhysics(dt);
   updateAnimations(dt);
   updateParticles(dt);
@@ -2760,7 +3795,16 @@ function animate() {
   // Sky & clouds animation
   const time = Date.now() * 0.001;
   skyMat.uniforms.uTime.value = time;
-  cloudOceanMat.uniforms.uTime.value = time;
+  // Animate ocean waves
+  const oceanPos = oceanGeo.attributes.position;
+  for (let i = 0; i < oceanPos.count; i++) {
+    const x = oceanVertices[i * 3];
+    const z = oceanVertices[i * 3 + 1];
+    const y = Math.sin(x * 0.05 + time * 2) * 0.5 + Math.cos(z * 0.05 + time * 1.5) * 0.3;
+    oceanPos.setZ(i, y);
+  }
+  oceanPos.needsUpdate = true;
+  oceanGeo.computeVertexNormals();
 
   // Animate floating clouds
   cloudGroup.children.forEach(cloud => {
@@ -2797,6 +3841,336 @@ function animate() {
 
   renderer.render(scene, camera);
 }
+
+// ===== TTS ANNOUNCER - Gaya Pembaca Acara Tinju =====
+class AnnouncerTTS {
+  constructor() {
+    this.synth = window.speechSynthesis;
+    this.voice = null;
+    this.enabled = true;
+    this.queue = [];
+    this.speaking = false;
+    this.isBusy = false; // Flag untuk hindari bentrok
+    
+    // Load voices
+    this.synth.onvoiceschanged = () => this.loadVoice();
+    this.loadVoice();
+  }
+  
+  loadVoice() {
+    const voices = this.synth.getVoices();
+    // Prioritas: Indonesia laki-laki > Inggris laki-laki > apapun
+    this.voice = voices.find(v => 
+      v.lang.startsWith('id') && !v.name.includes('Female') && !v.name.includes('Perempuan')
+    ) || voices.find(v => 
+      v.lang.startsWith('id')
+    ) || voices.find(v => 
+      v.name.includes('Google UK English Male') ||
+      v.name.includes('Microsoft David') ||
+      v.name.includes('Microsoft Mark') ||
+      v.name.includes('Guy')
+    ) || voices.find(v => v.lang.startsWith('en') && !v.name.includes('Female')) || voices[0];
+  }
+  
+  toggle() {
+    this.enabled = !this.enabled;
+    if (!this.enabled) {
+      // Matikan semua suara
+      this.synth.cancel();
+      this.queue = [];
+      this.speaking = false;
+      this.isBusy = false;
+    }
+    return this.enabled;
+  }
+  
+  // Fungsi utama: masukin queue, pastikan tidak bentrok
+  announce(text, options = {}) {
+    if (!this.enabled || !this.synth) return;
+    
+    const { priority = false, delay = 0 } = options;
+    
+    // Jika priority, cancel semua yang sedang jalan
+    if (priority) {
+      this.synth.cancel();
+      this.queue = [];
+      this.speaking = false;
+      this.isBusy = false;
+    }
+    
+    // Jika sedang bicara dan bukan priority, masuk queue
+    if (this.isBusy && !priority) {
+      this.queue.push({ text, delay });
+      return;
+    }
+    
+    // Langsung bicara
+    this._speak(text, delay);
+  }
+  
+  _speak(text, delay = 0) {
+    this.isBusy = true;
+    this.speaking = true;
+    
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      if (this.voice) utterance.voice = this.voice;
+      utterance.lang = this.voice?.lang || 'id-ID';
+      utterance.rate = 0.85;  // Lambat untuk efek dramatis (gaya tinju)
+      utterance.pitch = 0.8;  // Rendah untuk suara berwibawa
+      utterance.volume = 1.0;
+      
+      utterance.onend = () => {
+        this.speaking = false;
+        // Jeda 800ms sebelum bicara lagi (hindari bentrok)
+        setTimeout(() => {
+          this.isBusy = false;
+          this._processQueue();
+        }, 800);
+      };
+      
+      utterance.onerror = () => {
+        this.speaking = false;
+        this.isBusy = false;
+        this._processQueue();
+      };
+      
+      this.synth.speak(utterance);
+    }, delay);
+  }
+  
+  _processQueue() {
+    if (this.queue.length === 0 || this.isBusy) return;
+    
+    const next = this.queue.shift();
+    this._speak(next.text, next.delay || 0);
+  }
+  
+  // ===== GAYA PEMBACA ACARA TINJU =====
+  
+  // Pembukaan (saat round dimulai)
+  announceRoundStart(round) {
+    this.announce(`Ronde ${round}! Siap! Bertarung!`, { priority: true });
+  }
+  
+  // Pemenang (dengan selamat dan dramatis)
+  announceWinner(name) {
+    // Sequence dramatis seperti pembaca tinju
+    this.announce(`Dan pemenangnya adalah...`, { priority: true, delay: 0 });
+    this.announce(`${name}!`, { priority: false, delay: 1500 });
+    this.announce(`Selamat kepada ${name}! Juara Battle Ring!`, { priority: false, delay: 1000 });
+  }
+  
+  // Seri
+  announceDraw() {
+    this.announce(`Seri! Tidak ada yang selamat! Pertarungan berakhir imbang!`, { priority: true });
+  }
+  
+  // Gift (dengan variasi berdasarkan efek game)
+  announceGift(name, effectName, tier) {
+    const messages = {
+      'vip': [
+        `${name} aktifkan ${effectName}! Semua terbang!`,
+        `${name} dengan ${effectName}! Luar biasa!`,
+        `${name} gunakan ${effectName}! Kekuatan dahsyat!`
+      ],
+      'big': [
+        `${name} aktifkan ${effectName}! Kekuatan besar!`,
+        `${name} dengan ${effectName}! Dahsyat!`,
+        `${name} gunakan ${effectName}! Luar biasa!`
+      ],
+      'medium': [
+        `${name} aktifkan ${effectName}! Bagus!`,
+        `${name} dengan ${effectName}! Mantap!`,
+        `${name} gunakan ${effectName}! Serangan!`
+      ],
+      'small': [
+        `${name} dapat ${effectName}!`,
+        `${name} dengan ${effectName}!`,
+        `${name} aktifkan ${effectName}!`
+      ]
+    };
+    
+    const tierMessages = messages[tier] || messages['small'];
+    const msg = tierMessages[Math.floor(Math.random() * tierMessages.length)];
+    this.announce(msg);
+  }
+  
+  // Eliminasi
+  announceElimination(name) {
+    const messages = [
+      `${name} tereliminasi!`,
+      `${name} keluar dari arena!`,
+      `${name} gugur!`,
+      `${name} jatuh! Tidak bisa bangun!`
+    ];
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    this.announce(msg);
+  }
+  
+  // Countdown (saat timer hampir habis)
+  announceCountdown(seconds) {
+    if (seconds <= 10 && seconds > 0) {
+      this.announce(`${seconds}!`, { priority: false });
+    }
+  }
+  
+  // Viewer join
+  announceJoin(name) {
+    this.announce(`${name} masuk arena!`);
+  }
+}
+
+const announcer = new AnnouncerTTS();
+
+function toggleTTS() {
+  const enabled = announcer.toggle();
+  const btn = document.getElementById("ttsToggleBtn");
+  btn.textContent = enabled ? "Announcer: ON" : "Announcer: ON";
+  btn.style.background = enabled ? "#ff8800" : "#222";
+  btn.style.color = enabled ? "#fff" : "#ccc";
+  addNotification(enabled ? "Announcer aktif!" : "Announcer nonaktif");
+}
+
+function testAnnouncer() {
+  if (!announcer.enabled) toggleTTS();
+  announcer.announce("Ladies and gentlemen! Welcome to Battle Ring! Let the fight begin!", true);
+}
+
+window.toggleTTS = toggleTTS;
+window.testAnnouncer = testAnnouncer;
+
+// ===== DASHBOARD BUTTON =====
+document.getElementById('dashboardBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  window.location.href = '/';
+});
+
+// ===== CONNECT BUTTON =====
+let connectPopupOpen = false;
+
+document.getElementById('connectBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  toggleConnectPopup();
+});
+
+window.toggleConnectPopup = function() {
+  connectPopupOpen = !connectPopupOpen;
+  document.getElementById('connectPopup').style.display = connectPopupOpen ? 'block' : 'none';
+  if (connectPopupOpen) {
+    document.getElementById('connectUsername').focus();
+  }
+}
+
+window.connectFromGame = async function() {
+  const username = document.getElementById('connectUsername').value.trim().replace('@', '');
+  if (!username) return;
+  
+  const statusEl = document.getElementById('connectStatus');
+  statusEl.textContent = 'Menghubungkan...';
+  statusEl.style.color = '#888';
+  
+  // Clear old players first (with proper dispose)
+  const oldIds = [...players.keys()];
+  for (const id of oldIds) {
+    removePlayer(id);
+  }
+  addNotification('Menghapus data pemain lama...', '');
+  
+  // Update ROOM
+  window.ROOM = username;
+  
+  // Call API connect FIRST (before socket)
+  try {
+    const res = await fetch('/api/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username })
+    });
+    const data = await res.json();
+    
+    if (data.ok) {
+      console.log('API connect success:', data);
+      
+      // Now disconnect old socket and reconnect
+      if (socket) {
+        socket.disconnect();
+      }
+      
+      // Reconnect with new room
+      socket = io({ query: { room: username } });
+      window.socket = socket;
+      
+      // Re-register event handlers
+      socket.on('like', (data) => handleLike(data));
+      socket.on('chat', (data) => handleChat(data));
+      socket.on('gift', (data) => handleGift(data));
+      socket.on('follow', (data) => handleFollow(data));
+      socket.on('share', (data) => handleShare(data));
+      socket.on('social', (data) => {
+        // Handle social events (follow/share fallback)
+        if (data.displayType?.includes('follow')) handleFollow(data);
+        if (data.displayType?.includes('share')) handleShare(data);
+      });
+      socket.on('viewer-join', async (data) => {
+        if (!players.has(data.uniqueId) && !pendingPlayers.has(data.uniqueId)) {
+          const p = await createPlayer(data);
+          if (p) {
+            SFX.join();
+          }
+        }
+        handleViewerJoin(data);
+      });
+      socket.on('room-stats', (data) => {});
+      
+      // Connection status feedback
+      socket.on('connection-status', (data) => {
+        console.log('Connection status:', data);
+        if (data.connected) {
+          statusEl.textContent = `✅ Terhubung ke @${username}!`;
+          statusEl.style.color = '#00ff88';
+          addNotification(`Live terhubung! Room: ${data.roomId}`, 'power');
+        } else if (data.error) {
+          statusEl.textContent = `❌ ${data.error}`;
+          statusEl.style.color = '#ff4444';
+          addNotification(`Error: ${data.error}`, '');
+        }
+      });
+      
+      // Update UI
+      statusEl.textContent = 'Terhubung!';
+      statusEl.style.color = '#00ff88';
+      addNotification(`Terhubung ke @${username}!`, 'power');
+      
+      // Update URL without reload
+      const url = new URL(window.location);
+      url.searchParams.set('room', username);
+      window.history.replaceState({}, '', url);
+      
+      // Auto-close popup after 2 seconds
+      setTimeout(() => {
+        toggleConnectPopup();
+        statusEl.textContent = '';
+      }, 2000);
+    } else {
+      statusEl.textContent = 'Error: ' + (data.error || 'Gagal');
+      statusEl.style.color = '#ff4444';
+    }
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.style.color = '#ff4444';
+  }
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', (e) => {
+  if (connectPopupOpen && !e.target.closest('#connectPopup') && !e.target.closest('#connectBtn')) {
+    toggleConnectPopup();
+  }
+});
 
 // ===== DEBUG PANEL SETUP =====
 function setupDebugPanel() {
@@ -2999,7 +4373,7 @@ function toggleVoiceCommentary() {
 
 function testVoice() {
   if (!voiceEnabled) toggleVoiceCommentary();
-  queueVoiceEvent('sumo_fight', {
+  queueVoiceEvent('battle_ring_fight', {
     round: roundNumber || 1,
     playerCount: players.size || 3
   }, 3);
@@ -3161,7 +4535,7 @@ function flushViewerBatch() {
     ? names.join(', ')
     : names.slice(0, 3).join(', ') + ` dan ${names.length - 3} lagi`;
 
-  queueVoiceEvent('sumo_viewers_welcome', {
+  queueVoiceEvent('battle_ring_viewers_welcome', {
     count: batch.length,
     names: nameStr
   }, 2);
@@ -3179,7 +4553,7 @@ function updateInviteTimer(dt) {
     const languages = ['BM pasar', 'English casual', 'Bahasa Indonesia santai', 'Thai friendly'];
     const lang = languages[Math.floor(Math.random() * languages.length)];
 
-    queueVoiceEvent('sumo_invite_friends', {
+    queueVoiceEvent('battle_ring_invite_friends', {
       playerCount: players.size,
       viewerCount: totalViewersGreeted,
       language: lang
@@ -3190,6 +4564,15 @@ function updateInviteTimer(dt) {
 window._toggleVoice = toggleVoiceCommentary;
 window._testVoice = testVoice;
 
+// Export handlers to window scope
+window.handleLike = handleLike;
+window.handleChat = handleChat;
+window.handleGift = handleGift;
+window.handleFollow = handleFollow;
+window.handleShare = handleShare;
+window.handleViewerJoin = handleViewerJoin;
+window.socket = null;
+
 // ===== INIT =====
 async function init() {
   await loadAssets();
@@ -3197,9 +4580,34 @@ async function init() {
   connectSocket();
   setRoundState('WAITING');
   animate();
+  
+  // Auto-connect to TikTok if ?room= parameter is present
+  if (ROOM) {
+    console.log('Auto-connecting to room:', ROOM);
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: ROOM })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          console.log('Auto-connect success:', data);
+          addNotification(`Auto-connect ke @${ROOM}!`, 'power');
+        } else {
+          console.warn('Auto-connect failed:', data.error);
+        }
+      } catch (e) {
+        console.warn('Auto-connect error:', e.message);
+      }
+    }, 2000); // Delay 2s to let socket connect first
+  }
 }
 
 init();
 </script>
+
+<!-- Connect functions already defined in module script above (window.toggleConnectPopup, window.connectFromGame) -->
 </body>
 </html>
