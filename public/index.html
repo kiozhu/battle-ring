@@ -332,29 +332,7 @@
       white-space: nowrap;
     }
 
-    /* Game Tabs */
-    .game-tabs {
-      display: flex;
-      border-bottom: 1px solid #222;
-      background: #0d0d0d;
-    }
-    .game-tab {
-      flex: 1;
-      padding: 10px 8px;
-      background: none;
-      border: none;
-      color: #666;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.2s, border-color 0.2s;
-      text-align: center;
-    }
-    .game-tab:hover { color: #aaa; }
-    .game-tab.active { color: #fff; border-bottom-color: #25f4ee; }
-    .game-tab-content { display: none; padding: 8px 10px; }
-    .game-tab-content.active { display: block; }
+    /* Game Cards */
     .game-card {
       display: flex;
       align-items: center;
@@ -397,20 +375,8 @@
       transition: opacity 0.2s;
     }
     .game-card-actions button:hover { opacity: 0.85; }
-    .game-badge {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 8px;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .game-badge.soon { background: #0ea5e9; color: #fff; }
-    .game-badge.new { background: #22c55e; color: #fff; }
-    .game-badge.live { background: #fe2c55; color: #fff; }
 
-    /* Cost bar */
+
     .cost-bar {
       padding: 6px 15px;
       background: #0d0d0d;
@@ -451,6 +417,10 @@
     <input type="text" id="usernameInput" placeholder="Enter TikTok username..." value="">
     <button id="connectBtn" onclick="connectTikTok()">Connect</button>
     <button id="demoBtn" onclick="toggleDemo()" style="background:linear-gradient(135deg,#a855f7,#6366f1);padding:12px 24px;border-radius:8px;border:none;color:#fff;font-size:16px;font-weight:600;cursor:pointer;">Demo Mode</button>
+    <label style="display:flex;align-items:center;gap:6px;margin-left:12px;cursor:pointer;">
+      <input type="checkbox" id="autoConnectToggle" onchange="toggleAutoConnect(this.checked)" style="width:16px;height:16px;cursor:pointer;">
+      <span style="color:#888;font-size:13px;">Auto-Connect</span>
+    </label>
   </div>
 
   <div class="stats-bar">
@@ -474,6 +444,19 @@
       <div class="stat-value" id="likeCount">0</div>
       <div class="stat-label">Likes</div>
     </div>
+    <div class="stat" onclick="toggleSessions()" style="cursor:pointer;" title="Click to toggle debug panel">
+      <div class="stat-value" id="sessionCount">0</div>
+      <div class="stat-label">Sessions</div>
+    </div>
+  </div>
+
+  <!-- Sessions Debug Panel -->
+  <div id="sessionsPanel" style="display:none;background:#111;border:1px solid #333;border-radius:8px;padding:12px;margin:8px 0;max-height:200px;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="color:#888;font-size:12px;font-weight:600;">DEBUG: Active Sessions</span>
+      <button onclick="refreshSessions()" style="background:#333;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;">Refresh</button>
+    </div>
+    <div id="sessionsList" style="font-size:12px;color:#aaa;">Loading...</div>
   </div>
 
   <div class="content">
@@ -484,130 +467,30 @@
     <div class="feed-panel">
       <h2>Live Feed</h2>
       <div class="feed-list" id="feedList"></div>
-      <!-- Game Tabs -->
-      <div class="game-tabs">
-        <button class="game-tab active" data-tab="portrait" onclick="switchTab('portrait')">Portrait 9:16</button>
-        <button class="game-tab" data-tab="landscape" onclick="switchTab('landscape')">Landscape 16:9</button>
-        <button class="game-tab" data-tab="tools" onclick="switchTab('tools')">Tools</button>
-      </div>
 
-      <!-- Portrait Games -->
-      <div class="game-tab-content active" id="tab-portrait">
-        <div class="game-card">
-          <div class="game-card-icon">🏃</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#a855f7">Marathon 3D</div>
-            <div class="game-card-desc">Endless marathon race — portrait 9:16</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="marathonUrl">
-            <button onclick="copyUrl('marathonUrl')" style="background:#a855f7;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('marathonUrl').value,'_blank')" style="background:#a855f7;color:#fff">Open</button>
-          </div>
+      <!-- Games -->
+      <div class="game-card">
+        <div class="game-card-icon">👊</div>
+        <div class="game-card-info">
+          <div class="game-card-name" style="color:#fe2c55">Battle Ring</div>
+          <div class="game-card-desc">Arena battle — push opponents off the ring</div>
         </div>
-        <div class="game-card">
-          <div class="game-card-icon">🏔️</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#22c55e">Hill Climb 3D</div>
-            <div class="game-card-desc">Endless hill climb race — portrait 9:16</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="hillclimbUrl">
-            <button onclick="copyUrl('hillclimbUrl')" style="background:#22c55e;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('hillclimbUrl').value,'_blank')" style="background:#22c55e;color:#fff">Open</button>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-card-icon">📚</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#f59e0b">FunClass</div>
-            <div class="game-card-desc">3D classroom — earn points studying — portrait 9:16</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="funclassUrl">
-            <button onclick="copyUrl('funclassUrl')" style="background:#f59e0b;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('funclassUrl').value,'_blank')" style="background:#f59e0b;color:#fff">Open</button>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-card-icon">👊</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#ff4444">Sumo Smash <span class="game-badge soon">DEV</span></div>
-            <div class="game-card-desc">Arena battle — push opponents off — portrait 9:16</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="sumoUrl">
-            <button onclick="copyUrl('sumoUrl')" style="background:#ff4444;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('sumoUrl').value,'_blank')" style="background:#ff4444;color:#fff">Open</button>
-          </div>
+        <div class="game-card-actions">
+          <input type="hidden" id="sumoUrl">
+          <button onclick="copyUrl('sumoUrl')" style="background:#fe2c55;color:#fff">Copy</button>
+          <button onclick="window.open(document.getElementById('sumoUrl').value,'_blank')" style="background:#fe2c55;color:#fff">Open</button>
         </div>
       </div>
-
-      <!-- Landscape Games -->
-      <div class="game-tab-content" id="tab-landscape">
-        <div class="game-card">
-          <div class="game-card-icon">🐟</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#0ea5e9">Fichy <span class="game-badge soon">DEV</span></div>
-            <div class="game-card-desc">Fish It — TikTok Live fishing — landscape 16:9</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="fichyUrl">
-            <button onclick="copyUrl('fichyUrl')" style="background:#333;color:#666;cursor:not-allowed" disabled>Copy</button>
-            <button style="background:#333;color:#666;cursor:not-allowed" disabled>Dev Only</button>
-          </div>
+      <div class="game-card">
+        <div class="game-card-icon">🖼️</div>
+        <div class="game-card-info">
+          <div class="game-card-name" style="color:#888">Overlay</div>
+          <div class="game-card-desc">Stream overlay — chat + gifts</div>
         </div>
-      </div>
-
-      <!-- Tools -->
-      <div class="game-tab-content" id="tab-tools">
-        <div class="game-card">
-          <div class="game-card-icon">🖼️</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#888">Overlay</div>
-            <div class="game-card-desc">Stream overlay — chat + gifts</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="overlayUrl">
-            <button onclick="copyUrl('overlayUrl')" style="background:#888;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('overlayUrl').value,'_blank')" style="background:#888;color:#fff">Open</button>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-card-icon">🎙️</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#ec4899">Voice AI</div>
-            <div class="game-card-desc">AI voice avatar — Digital Twin</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="voiceUrl">
-            <button onclick="copyUrl('voiceUrl')" style="background:#ec4899;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('voiceUrl').value,'_blank')" style="background:#ec4899;color:#fff">Open</button>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-card-icon">🔮</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#9b59b6">Fortune Teller <span class="game-badge new">NEW</span></div>
-            <div class="game-card-desc">AI fortune reader — zodiac, jodoh, ramalan</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="fortunetellerUrl">
-            <button onclick="copyUrl('fortunetellerUrl')" style="background:#9b59b6;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('fortunetellerUrl').value,'_blank')" style="background:#9b59b6;color:#fff">Open</button>
-          </div>
-        </div>
-        <div class="game-card">
-          <div class="game-card-icon">🎮</div>
-          <div class="game-card-info">
-            <div class="game-card-name" style="color:#fe2c55">2D Game</div>
-            <div class="game-card-desc">Classic 2D TikTok game</div>
-          </div>
-          <div class="game-card-actions">
-            <input type="hidden" id="gameUrl">
-            <button onclick="copyUrl('gameUrl')" style="background:#fe2c55;color:#fff">Copy</button>
-            <button onclick="window.open(document.getElementById('gameUrl').value,'_blank')" style="background:#fe2c55;color:#fff">Open</button>
-          </div>
+        <div class="game-card-actions">
+          <input type="hidden" id="overlayUrl">
+          <button onclick="copyUrl('overlayUrl')" style="background:#888;color:#fff">Copy</button>
+          <button onclick="window.open(document.getElementById('overlayUrl').value,'_blank')" style="background:#888;color:#fff">Open</button>
         </div>
       </div>
       <div class="cost-bar" id="costBar" style="display:none">
@@ -700,17 +583,13 @@
       socket = io({ query: { room: ROOM } });
       setupSocketEvents();
 
+      // Load auto-connect status
+      loadAutoConnectStatus();
+
       // Set URLs with room param
       const roomParam = ROOM ? `?room=${ROOM}` : '';
       document.getElementById('overlayUrl').value = `${window.location.origin}/overlay${roomParam}`;
-      document.getElementById('gameUrl').value = `${window.location.origin}/game${roomParam}`;
-      document.getElementById('marathonUrl').value = `${window.location.origin}/marathon${roomParam}`;
-      document.getElementById('hillclimbUrl').value = `${window.location.origin}/hillclimb${roomParam}`;
-      document.getElementById('funclassUrl').value = `${window.location.origin}/funclass${roomParam}`;
-      document.getElementById('voiceUrl').value = `${window.location.origin}/voice${roomParam}`;
-      document.getElementById('fichyUrl').value = `${window.location.origin}/fichy${roomParam}`;
       document.getElementById('sumoUrl').value = `${window.location.origin}/sumo${roomParam}`;
-      document.getElementById('fortunetellerUrl').value = `${window.location.origin}/fortuneteller${roomParam}`;
 
       // Load config — only pre-fill username for pre-configured hosts, not access mode
       if (ROOM) {
@@ -732,7 +611,6 @@
     }
 
     let stats = { viewers: 0, joined: 0, chats: 0, gifts: 0, likes: 0 };
-    const viewerMap = new Map();
 
     function setupSocketEvents() {
       socket.on('connection-status', (state) => {
@@ -814,14 +692,7 @@
         // Update URLs with room param
         const roomParam = `?room=${ROOM}`;
         document.getElementById('overlayUrl').value = `${window.location.origin}/overlay${roomParam}`;
-        document.getElementById('gameUrl').value = `${window.location.origin}/game${roomParam}`;
-        document.getElementById('marathonUrl').value = `${window.location.origin}/marathon${roomParam}`;
-        document.getElementById('hillclimbUrl').value = `${window.location.origin}/hillclimb${roomParam}`;
-        document.getElementById('funclassUrl').value = `${window.location.origin}/funclass${roomParam}`;
-        document.getElementById('voiceUrl').value = `${window.location.origin}/voice${roomParam}`;
-        document.getElementById('fichyUrl').value = `${window.location.origin}/fichy${roomParam}`;
         document.getElementById('sumoUrl').value = `${window.location.origin}/sumo${roomParam}`;
-        document.getElementById('fortunetellerUrl').value = `${window.location.origin}/fortuneteller${roomParam}`;
         // Update room badge
         const badge = document.getElementById('roomBadge');
         badge.style.display = 'inline-block';
@@ -836,11 +707,23 @@
       return `/api/proxy-image?url=${encodeURIComponent(url)}`;
     }
 
+    const MAX_VIEWER_CARDS = 20;
+    let viewerMap = new Map();
+    let hiddenCount = 0;
+
     function addViewerCard(viewer) {
       if (viewerMap.has(viewer.id)) return;
       viewerMap.set(viewer.id, viewer);
 
       const grid = document.getElementById('viewerGrid');
+      const currentCount = grid.querySelectorAll('.viewer-card').length;
+
+      if (currentCount >= MAX_VIEWER_CARDS) {
+        hiddenCount++;
+        updateViewerOverflow();
+        return;
+      }
+
       const card = document.createElement('div');
       card.className = 'viewer-card new';
       card.id = `viewer-${viewer.id}`;
@@ -854,6 +737,17 @@
       `;
       grid.prepend(card);
       setTimeout(() => card.classList.remove('new'), 3000);
+    }
+
+    function updateViewerOverflow() {
+      let overflow = document.getElementById('viewerOverflow');
+      if (!overflow) {
+        overflow = document.createElement('div');
+        overflow.id = 'viewerOverflow';
+        overflow.style.cssText = 'text-align:center;padding:8px;color:#888;font-size:12px;border-top:1px solid #222;margin-top:4px;';
+        document.getElementById('viewerGrid').after(overflow);
+      }
+      overflow.textContent = `+${hiddenCount} lainnya`;
     }
 
     function addFeedItem(type, profilePic, name, message) {
@@ -880,19 +774,71 @@
       document.getElementById('likeCount').textContent = stats.likes;
     }
 
-    function switchTab(tabName) {
-      document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.game-tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-      document.getElementById(`tab-${tabName}`).classList.add('active');
-    }
-
     function copyUrl(id) {
       const url = document.getElementById(id).value;
       navigator.clipboard.writeText(url);
       const btn = event.target;
       btn.textContent = 'Copied!';
       setTimeout(() => btn.textContent = 'Copy', 1500);
+    }
+
+    // Auto-Connect Toggle
+    async function toggleAutoConnect(enabled) {
+      try {
+        const res = await fetch('/api/auto-connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        const data = await res.json();
+        console.log('[Auto-Connect]', data);
+      } catch (err) {
+        console.error('[Auto-Connect] Error:', err);
+      }
+    }
+
+    // Load auto-connect status on startup
+    async function loadAutoConnectStatus() {
+      try {
+        const res = await fetch('/api/auto-connect');
+        const data = await res.json();
+        document.getElementById('autoConnectToggle').checked = data.enabled;
+      } catch (err) {
+        console.error('[Auto-Connect] Failed to load status');
+      }
+    }
+
+    // Sessions Debug Panel
+    function toggleSessions() {
+      const panel = document.getElementById('sessionsPanel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      if (panel.style.display === 'block') refreshSessions();
+    }
+
+    async function refreshSessions() {
+      try {
+        const res = await fetch('/api/sessions');
+        const sessions = await res.json();
+        document.getElementById('sessionCount').textContent = sessions.length;
+
+        const list = document.getElementById('sessionsList');
+        if (sessions.length === 0) {
+          list.innerHTML = '<span style="color:#666;">No active sessions</span>';
+          return;
+        }
+
+        list.innerHTML = sessions.map(s => `
+          <div style="padding:4px 0;border-bottom:1px solid #222;">
+            <span style="color:#25f4ee;">${s.username || 'unknown'}</span>
+            <span style="color:#666;"> | </span>
+            <span>${s.connected ? '🟢 Connected' : '🔴 Disconnected'}</span>
+            <span style="color:#666;"> | </span>
+            <span>Room: ${s.roomId || 'N/A'}</span>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('sessionsList').innerHTML = '<span style="color:#ff4444;">Error loading sessions</span>';
+      }
     }
 
     let demoActive = false;

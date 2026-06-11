@@ -2,16 +2,46 @@
 
 Game pertarungan 3D real-time untuk TikTok Live. Viewer menjadi karakter dan bertarung di arena. Gift, like, chat, dan follow dari viewer memicu efek visual di game.
 
-## ✨ Fitur
+**✅ Tested: 67+ ronde tanpa lag/hang, stabil 3+ jam live**
 
-- **Karakter 3D** — DJT, NEO, VP, Soldier (GLB models dengan animasi)
+![Battle Ring Gameplay](screenshot.png)
+
+## ✨ Fitur Utama
+
+### 🎮 Gameplay
+- **Karakter 3D** — DJT, NEO, VP, Soldier (GLB models dengan 14 animasi)
 - **Arena Dinamis** — 5 tema (Langit Biru, Sunset, Malam, Hutan, Gurun)
-- **Bot System** — 2-7 bot otomatis, nama Indonesia bervariasi
-- **Gift Effects** — Ledakan, tornado, meteor, petir sesuai tier gift
-- **TTS Announcer** — Pengumuman gaya pembaca tinju Indonesia
 - **Auto Camera** — 5 mode kamera (dramatic, orbit, follow, cinematic, low_orbit)
-- **Rate Limiting** — Token bucket per event type (stabil di stream viral)
-- **Memory Management** — Three.js object disposal otomatis (stabil berjam-jam)
+- **Round System** — WAITING → COUNTDOWN → ACTIVE → ENDED → INTERMISSION
+
+### 🎁 Gift System
+| Gift Tier | Nama | Efek |
+|-----------|------|------|
+| 🌹 Small (1-10💎) | Power Up | Heart burst + kekuatan 2x lipat |
+| ⚡ Medium (11-99💎) | Ground Slam | Energy ball + shockwave + knockback |
+| 🌪️ Big (100-499💎) | Shockwave Slam | Tornado + petir + AoE knockback kuat |
+| ☄️ VIP (500+💎) | Meteor Spin | Meteor jatuh + nuke semua pemain |
+
+### 🤖 Bot System
+- **Auto-start** — Bot spawn otomatis dalam 5 detik jika tidak ada viewer
+- **Auto-fill** — Jika kurang dari 3 pemain, bot langsung spawn
+- **130+ nama Indonesia** — Budi, Andi, Sari, Rizky, Sultan_Battle, dll
+- **Karakter random** — DJT, NEO, VP, atau Soldier
+- **Auto-respawn** — Jika semua bot mati, spawn bot baru (max 5× per round)
+
+### 🎤 TTS Banter System
+- **220+ dialog** dalam 23 kategori (sapaan, taunt, humor, motivasi, CTA, dll)
+- **Anti-repeat** — History tracking 20 dialog terakhir
+- **Category cooldown** — Kategori sama tidak muncul 2x berturut
+- **Context-aware** — Dialog menyesuaikan HP, arena, durasi live
+- **Chat bubble** — Dialog muncul di atas kepala karakter (unggu)
+- **Dual voice** — Male (Microsoft Andika) + Female (Google Bahasa Indonesia)
+
+### 📊 Dashboard
+- **Auto-Connect** — Checkbox untuk auto-connect ke TikTok saat server start
+- **Sessions Debug** — Panel untuk monitor active sessions
+- **Viewer Limit** — Max 20 viewer card, sisanya "+X lainnya"
+- **Live Feed** — Real-time chat, gift, follow, like events
 
 ## 🚀 Instalasi
 
@@ -33,6 +63,7 @@ cp .env.example .env
 PORT=5051
 TIKTOK_USERNAME=username_tiktok_kamu
 EULER_API_KEY=kunci_api_euler_kamu
+AUTO_CONNECT=true
 ```
 
 ### Jalankan
@@ -52,7 +83,7 @@ pm2 start server.js --name battle-ring
 
 ### 1. Buka Game
 ```
-http://localhost:5051/battle-ring
+http://localhost:5051/sumo
 ```
 
 ### 2. Hubungkan ke TikTok Live
@@ -62,7 +93,7 @@ http://localhost:5051/battle-ring
 
 Atau langsung via URL:
 ```
-http://localhost:5051/battle-ring?room=username_tiktok
+http://localhost:5051/sumo?room=username_tiktok
 ```
 
 ### 3. Interaksi Viewer
@@ -76,6 +107,22 @@ http://localhost:5051/battle-ring?room=username_tiktok
 | Gift besar | Shockwave Slam |
 | Gift VIP | Meteor Spin |
 | Follow | Efek bintang |
+
+### 4. Dashboard
+```
+http://localhost:5051
+```
+- Monitor viewers, chat, gift, likes
+- Copy URL untuk Battle Ring dan Overlay
+- Toggle Auto-Connect
+- Debug sessions
+
+### 5. OBS Overlay
+```
+http://localhost:5051/overlay
+```
+- Tambahkan sebagai Browser Source di OBS
+- Ukuran: 1080x1920 (portrait) atau sesuaikan
 
 ## 🏗️ Arsitektur
 
@@ -91,8 +138,7 @@ TikTok Live → tiktok-live-connector → Node.js Server → Socket.IO → Brows
 | Real-time | Socket.IO | Komunikasi server ↔ browser |
 | 3D Engine | Three.js | Render karakter, arena, efek |
 | TikTok | tiktok-live-connector | Koneksi ke TikTok Live |
-| Signing | EulerStream API | WebSocket URL signing |
-| TTS | Web Speech API | Suara announcer |
+| TTS | Web Speech API | Suara announcer + banter |
 
 ### Struktur File
 
@@ -102,7 +148,6 @@ TikTok Live → tiktok-live-connector → Node.js Server → Socket.IO → Brows
 │   ├── battle-ring.html   # Game client (Three.js)
 │   ├── index.html         # Dashboard
 │   ├── overlay.html       # OBS overlay
-│   ├── voice.html         # AI voice avatar
 │   └── assets/
 │       ├── base.glb       # Model arena
 │       └── characters/
@@ -122,11 +167,12 @@ TikTok Live → tiktok-live-connector → Node.js Server → Socket.IO → Brows
 |-------|--------|
 | Token Bucket Rate Limiting | Batasi events per tipe (prevent overwhelming browser) |
 | Three.js Memory Dispose | Bersihkan GPU memory otomatis (prevent memory leak) |
-| Cap Viewers Map | Batasi 500 viewers per session (prevent OOM) |
+| Cap Viewers Map | Batasi 2000 viewers per session (prevent OOM) |
 | Ocean Optimization | Update gelombang tiap 3 frame (hemat CPU 66%) |
 | Cache Alive Players | 0 array allocations per detik (hilangkan micro-stutter) |
 | Exponential Backoff | Reconnect otomatis 2s→4s→8s→16s→30s (max 5 attempts) |
 | Graceful Shutdown | Bersih saat SIGINT/SIGTERM |
+| Banter Anti-Overlap | isSpeaking flag + safety timeout 15 detik |
 
 ### Rate Limits
 
@@ -149,23 +195,22 @@ TikTok Live → tiktok-live-connector → Node.js Server → Socket.IO → Brows
 | Hutan | Hijau, laut hijau tua |
 | Gurun | Oranye, laut coklat |
 
-## 🤖 Bot System
-
-- **Auto-start** — Bot spawn otomatis setelah 5 detik jika tidak ada viewer
-- **Jumlah bervariasi** — 2-7 bot (random)
-- **Nama Indonesia** — 100+ nama bervariasi (Budi, Andi, Sari, dll)
-- **Karakter random** — DJT, NEO, VP, atau Soldier
-- **Auto-respawn** — Jika semua bot mati, spawn 1-4 bot baru (max 5× per round)
-
 ## 🔧 API Endpoints
 
 | Method | Endpoint | Fungsi |
 |--------|----------|--------|
-| GET | `/battle-ring` | Game client |
+| GET | `/sumo` | Game client (Battle Ring) |
 | GET | `/` | Dashboard |
 | GET | `/overlay` | OBS overlay |
 | POST | `/api/connect` | Hubungkan ke TikTok Live |
 | GET | `/api/config` | Konfigurasi server |
+| GET | `/api/auto-connect` | Status auto-connect |
+| POST | `/api/auto-connect` | Toggle auto-connect |
+| GET | `/api/sessions` | List active sessions |
+| GET | `/api/session/:room/cost` | Estimasi biaya session |
+| GET | `/api/proxy-image` | Proxy gambar TikTok |
+| POST | `/api/voice/generate` | Generate TTS commentary |
+| POST | `/api/chat/send` | Kirim chat ke TikTok |
 
 ## 📦 Dependencies
 
@@ -191,6 +236,10 @@ TikTok Live → tiktok-live-connector → Node.js Server → Socket.IO → Brows
 ### Server crash
 - Cek logs: `pm2 logs battle-ring --lines 50`
 - Restart: `pm2 restart battle-ring`
+
+### TTS tidak bunyi
+- Klik halaman sekali (browser block audio tanpa user interaction)
+- Cek console log: `[BanterTTS] Male: ... | Female: ...`
 
 ## 📄 License
 

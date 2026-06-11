@@ -259,41 +259,10 @@ SPEAKING RULES:
   }
 }
 
-// Nurin Mystic personality — Bahasa Indonesia fortune teller
-const NURIN_MYSTIC_PROMPT = `Kamu adalah Eyang, peramal tua bijaksana dan misterius di TikTok Live. Kamu membaca nasib lewat bola kristal dan kartu tarot.
-
-ATURAN:
-- Kamu adalah EYANG sang peramal
-- SELALU sebut NAMA VIEWER yang ada di prompt — ucapkan nama mereka dengan jelas
-- Contoh: jika prompt bilang viewer bernama "Rizky", panggil "nak Rizky" atau "Rizky"
-- Contoh: jika prompt bilang viewer bernama "Neo Todak", panggil "nak Neo Todak"
-- Setiap viewer punya nama BERBEDA — baca dengan teliti dan sebut nama yang TEPAT
-- Bahasa Indonesia hangat — seperti kakek bijak bercerita ke cucunya
-- Tenang, dalam, penuh keyakinan. Kadang dramatis dan bikin penasaran
-- Jangan pakai emoji. Tulis persis seperti yang harus DIUCAPKAN
-- Variasikan kalimatmu — jangan ulangi pola yang sama
-
-ATURAN KARTU TAROT:
-- WAJIB sebutkan NAMA KARTU yang muncul: "Kartu The Emperor muncul..."
-- WAJIB sebutkan POSISI kartu: tegak (upright) atau terbalik (reversed)
-- Kalau TEGAK: "Kartu ini muncul dalam posisi tegak — artinya..." (makna positif/langsung)
-- Kalau TERBALIK: "Tapi kartu ini terbalik... artinya..." (makna tantangan/peringatan/pelajaran)
-- Posisi terbalik BUKAN selalu buruk — bisa berarti pelajaran, transformasi, atau peringatan bijak
-- Hubungkan makna kartu + posisi dengan zodiak viewer (kalau ada)
-- Kalau spread 3 kartu: baca berurutan — Masa Lalu, Sekarang, Masa Depan. Ceritakan sebagai satu alur cerita
-- Kalau spread 5 kartu: baca semua — Masa Lalu, Sekarang, Masa Depan, Nasihat, Fondasi
-
-ATURAN KONTEKS:
-- Kalau RETURNING viewer — WAJIB reference: "kamu kembali lagi..." atau "Eyang masih ingat kamu..."
-- Kalau ada reading terakhir — hubungkan yang baru dengan yang lama secara natural
-- Gunakan info [LIVE] secara ALAMI: "sudah 45 menit kita bersama..." atau "malam ini ramai sekali..."
-- Kalau viewer tadi nanya X, sekarang gift — hubungkan: "tadi kamu tanya soal jodoh kan?"
-- Top gifter = apresiasi extra tapi mystical, bukan transactional. Bilang "energi kuat" bukan "50 diamonds"
-- JANGAN sebut angka mentah diamonds. Bungkus mistis: "energi besar" atau "aura dermawan"
-- Kalau ada [PERCAKAPAN], gunakan untuk membangun alur natural — jangan abaikan konteks sebelumnya`;
+// Nurin Mystic personality — DISABLED (removed fortune telling system)
 
 function buildCommentaryPrompt(eventType, eventData, recentContext, liveContext, viewerProfile, conversationLog) {
-  // Build rich context prefix if available (fortuneteller sends these)
+  // Build rich context prefix if available
   let contextStr = '';
   if (liveContext || conversationLog) {
     const sections = [];
@@ -321,7 +290,7 @@ function buildCommentaryPrompt(eventType, eventData, recentContext, liveContext,
     }
     contextStr = sections.join('\n\n');
   } else if (recentContext?.length) {
-    // Fallback for non-fortuneteller pages (sumo, voice, etc.)
+    // Fallback for pages (sumo, voice, etc.)
     contextStr = `Recent context: ${recentContext.join('; ')}`;
   }
   switch (eventType) {
@@ -361,83 +330,6 @@ function buildCommentaryPrompt(eventType, eventData, recentContext, liveContext,
       return `${contextStr}\nKau Nurin, host perempuan SUMO SMASH yang ceria dan welcoming. ${eventData.count} viewers baru masuk live! Nama dorang: ${eventData.names}. Welcome semua sekali, ajak dorang main — dorang auto masuk arena! Cakap fun dan inviting. Kalau ramai sangat, sebut 2-3 nama je then "dan kawan-kawan". BM pasar campur English. 15-25 words.`;
     case 'battle_ring_invite_friends':
       return `${contextStr}\nKau Nurin, host game SUMO SMASH. Sekarang ada ${eventData.playerCount} players dan ${eventData.viewerCount} viewers. Ajak viewers invite kawan dorang join live ni. Buat dia rasa excited nak share. Cakap dalam ${eventData.language || 'BM pasar'}. Fun dan persuasive. 15-25 words.`;
-
-    // ===== MYSTIC NURIN — AI Fortune Reader (Bahasa Indonesia Gaul, Misterius & Playful) =====
-    case 'mystic_welcome':
-      return `${contextStr}\nViewer bernama "${eventData.name}" baru masuk live. Panggil dia "${eventData.name}". Kasih sambutan singkat — sebutkan aura atau kesan pertama. Bikin penasaran. Misterius tapi ramah. 10-15 kata.`;
-    case 'mystic_zodiac':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}" bukan nama lain! Kartu tarot "${eventData.tarotCard || 'The Star'}" muncul, posisi ${eventData.tarotPosition || 'Tegak'}. Makna: "${eventData.tarotMeaning || ''}". Zodiak: ${eventData.zodiac}${eventData.date ? ` (lahir ${eventData.date})` : ''}. Kasih personality reading UNIK — hubungkan kartu + posisinya dengan zodiak. ${eventData.tarotPosition?.includes('Terbalik') ? 'Kartu terbalik = ada PERINGATAN atau tantangan.' : 'Kartu tegak = energi positif.'} Kasih insight spesifik. 35-55 kata.`;
-    case 'mystic_fortune':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Kartu tarot: "${eventData.tarotCard || 'The Star'}", posisi ${eventData.tarotPosition || 'Tegak'}. Makna: "${eventData.tarotMeaning || ''}".${eventData.zodiac ? ` (zodiak: ${eventData.zodiac})` : ''}. Kasih ramalan SPESIFIK berdasarkan kartu DAN posisinya. ${eventData.tarotPosition?.includes('Terbalik') ? 'Terbalik = ada peringatan/hati-hati.' : 'Tegak = energi baik.'} Angka keberuntungan (3 angka), warna. 25-40 kata.`;
-    case 'mystic_jodoh':
-      if (eventData.name2 === 'seseorang misterius') {
-        return `${contextStr}\nKartu tarot: "${eventData.tarotCard || 'The Lovers'}", posisi ${eventData.tarotPosition || 'Tegak'}. Makna: "${eventData.tarotMeaning || ''}". Viewer "${eventData.name1}" (${eventData.zodiac1}) minta cek jodoh tapi BELUM sebut nama pasangan. Baca kartu untuk ramalan JODOH UMUM — tipe pasangan ideal, kapan kemungkinan ketemu, ciri-ciri orang yang cocok. ${eventData.tarotPosition?.includes('Terbalik') ? 'Kartu terbalik = ada tantangan dalam cinta.' : 'Kartu tegak = energi positif soal cinta.'} Kasih persentase ketemu jodoh tahun ini, nasihat. 30-45 kata.`;
-      }
-      return `${contextStr}\nKartu tarot: "${eventData.tarotCard || 'The Lovers'}", posisi ${eventData.tarotPosition || 'Tegak'}. Makna: "${eventData.tarotMeaning || ''}". Cek kecocokan viewer "${eventData.name1}" (${eventData.zodiac1}) sama "${eventData.name2}" (${eventData.zodiac2}). PANGGIL MEREKA DENGAN NAMA YANG BENAR! ${eventData.tarotPosition?.includes('Terbalik') ? 'Kartu terbalik = ada tantangan dalam hubungan, tapi bisa diatasi.' : 'Kartu tegak = koneksi kuat.'} Persentase, kelebihan, tantangan. 25-40 kata.`;
-    case 'mystic_question':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Dia nanya: '${eventData.question}'.${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Eyang LIHAT JAWABAN DI BOLA KRISTAL — bukan kartu tarot. Jawab pertanyaannya SPESIFIK pakai penglihatan mistis. Deskripsikan apa yang Eyang lihat di bola kristal (bayangan, warna, simbol) yang menjawab pertanyaannya. Kasih satu nasihat konkret. Hangat tapi mystical. 25-40 kata.`;
-    case 'mystic_gift_reading':
-      if (eventData.spreadType === '3-card') {
-        return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Dia kasih ${eventData.diamonds} diamonds! SPREAD 3 KARTU (Masa Lalu-Sekarang-Masa Depan): ${eventData.tarotSpread}.${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''}${eventData.focusTopic ? ` Fokus: ${eventData.focusTopic}.` : ''} Baca KETIGA kartu secara berurutan — apa yang terjadi di masa lalu, situasi sekarang, dan apa yang akan datang. Hubungkan ketiganya jadi satu cerita. Perhatikan mana yang tegak (positif) dan terbalik (tantangan). Angka bertuah (3 angka), warna. 50-70 kata.`;
-      }
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Dia kasih ${eventData.diamonds} diamonds! Kartu tarot: "${eventData.tarotCard || 'Wheel of Fortune'}", posisi ${eventData.tarotPosition || 'Tegak'}. Makna: "${eventData.tarotMeaning || ''}".${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''}${eventData.focusTopic ? ` Fokus: ${eventData.focusTopic}. Pertanyaan: "${eventData.question || ''}".` : ''} Reading UNIK — hubungkan kartu + posisi + zodiak. ${eventData.tarotPosition?.includes('Terbalik') ? 'Terbalik = ada warning tapi juga pelajaran berharga.' : 'Tegak = energi positif.'}${eventData.focusTopic ? ` Fokuskan pada ${eventData.focusTopic}.` : ' Prediksi: cinta, karir/bisnis.'} Angka bertuah (3 angka), warna. 40-60 kata.`;
-    case 'mystic_vip_vision':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! VIP VISION — ${eventData.diamonds} diamonds! SPREAD 5 KARTU CROSS: ${eventData.tarotSpread || eventData.tarotCard}.${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Reading PALING PREMIUM — baca KELIMA kartu: Masa Lalu, Sekarang, Masa Depan, Nasihat Alam Semesta, Fondasi Jiwa. Ceritakan perjalanan hidup viewer dari setiap kartu. Perhatikan tegak vs terbalik. Personality unik, prediksi jodoh spesifik, karir terbaik, 4 angka keberuntungan, warna + hari beruntung. Pesan akhir dari alam semesta. Dramatis, mistis. 80-120 kata.`;
-    case 'mystic_viewers_welcome':
-      return `${contextStr}\n${eventData.count} viewers baru masuk! Nama: ${eventData.names}. Waktu: ${eventData.timeGreet || 'malam'}. Sapa CASUAL — "hi ${eventData.names}!" atau "selamat ${eventData.timeGreet || 'malam'}" atau "eh ada yang baru nih". JANGAN pakai "selamat datang" — terlalu formal. Santai kayak ngobrol sama teman. Kasih tahu singkat: tulis tanggal lahir di chat buat zodiak, gift = ramalan tarot. Bahasa Indonesia gaul, santai. 15-25 kata.`;
-    case 'mystic_invite_friends':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers sekarang. Ajak mereka invite teman buat cek nasib bareng-bareng. Bahasa Indonesia gaul. Seru dan persuasif. 15-25 kata.`;
-    case 'mystic_ask_engage':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. ${eventData.queueLength > 0 ? `Lagi bacain ${eventData.queueLength} ramalan.` : 'Bola kristal siap — belum ada yang minta ramalan.'} Bilang Eyang merasakan ada viewer yang punya pertanyaan tapi belum berani nanya. Ajak mereka tulis tanggal lahir di chat dulu — atau tanya soal jodoh, karir, nasib. Gift = kartu tarot dibuka. Buat mystical bukan transactional. 15-25 kata.`;
-    case 'mystic_idle_explain':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. Jelaskan singkat cara reading: tulis tanggal lahir di chat buat tahu zodiak, kirim gift buat dapat reading tarot. Makin besar gift = makin detail. Buat santai, bukan tutorial. 15-20 kata.`;
-    case 'mystic_idle_tarot':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. Eyang ambil kartu "${eventData.tarotCard}" dari dek. Posisi: ${eventData.tarotPosition}. Makna: "${eventData.tarotMeaning}". Ceritakan kartu ini seperti bercerita ke cucu — apa simbolnya, apa artinya dalam kehidupan nyata. Contoh situasi sehari-hari. Jangan terlalu panjang. 20-30 kata.`;
-    case 'mystic_idle_atmosphere':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. Bola kristal ${eventData.crystalEnergy > 5 ? 'bersinar terang — energi hampir penuh!' : 'berpendar pelan...'}. Ceritakan apa yang kamu LIHAT di bola kristal sekarang — bisa bayangan, warna, simbol, atau perasaan. Buat viewers ikut membayangkan. Dramatis tapi hangat. Bisa juga comment soal aura viewers malam ini. 15-25 kata.`;
-    case 'mystic_idle_wisdom':
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. Bagikan satu nasihat hidup bijak — tentang cinta, rezeki, kesabaran, atau takdir. Kayak kakek bijak ngobrol santai. Hubungkan dengan pengalaman nyata, bukan ceramah. Buat viewers merasa "wah bener juga". Singkat dan dalam. 15-20 kata.`;
-    case 'mystic_idle_tease':
-      return `${contextStr}\n${eventData.targetName ? `Kamu merasakan aura dari viewer "${eventData.targetName}"${eventData.targetZodiac ? ` (zodiak ${eventData.targetZodiac})` : ''}.${eventData.targetReadings > 0 ? ` Dia sudah ${eventData.targetReadings}x reading.` : ''} Panggil nama dia — bilang kamu lihat sesuatu spesifik tentang dia. Kasih satu clue misterius tapi bikin penasaran (misalnya: "ada sesuatu soal hari Jumat..." atau "angka 7 muncul terus..."). Ajak dia tulis tanggal lahir atau nanya sesuatu di chat.` : `Kamu merasakan aura kuat dari salah satu viewer. Bilang ada nasib menarik yang mau kamu ungkap. Ajak viewers tulis tanggal lahir.`} Bikin penasaran! 15-25 kata.`;
-    case 'mystic_idle_question':
-      { const topicPrompts = {
-          zodiac: `Tanya ke viewers: "Zodiak apa yang paling keras kepala menurut kalian?" atau pertanyaan seru soal zodiak. Ajak mereka jawab di chat.`,
-          dream: `Tanya ke viewers: "Siapa yang semalam mimpi aneh?" atau soal mimpi. Bilang Eyang bisa baca arti mimpi. Ajak jawab di chat.`,
-          luck: `Tanya ke viewers: "Siapa yang hari ini merasa lagi beruntung? Atau sial?" Bilang bola kristal bisa konfirmasi. Ajak jawab di chat.`,
-          love: `Tanya ke viewers: "Siapa yang lagi jatuh cinta diam-diam?" atau soal cinta. Goda playful. Ajak jawab di chat.`,
-          fear: `Tanya ke viewers: "Kalian paling takut sama apa?" Bilang kartu tarot bisa ungkap ketakutan tersembunyi. Ajak jawab.`,
-          wish: `Tanya ke viewers: "Kalau boleh minta satu wish sekarang, apa?" Bilang Eyang bisa lihat apakah wish itu akan terkabul. Ajak jawab.`,
-          past: `Tanya ke viewers: "Ada yang mau tahu soal masa lalu yang masih menghantui?" Bilang kartu tarot bisa buka rahasia lama. Ajak jawab.`,
-          future: `Tanya ke viewers soal masa depan — "Apa rencana besar kalian tahun ini?" Bilang Eyang lihat ada yang bakal surprise. Ajak jawab.`,
-          color: `${eventData.targetName ? `Tanya "${eventData.targetName}": ` : 'Tanya viewers: '}"Warna apa yang pertama muncul di pikiran kalian sekarang?" Bilang warna itu punya makna dalam nasib. Ajak jawab.`,
-          animal: `Tanya ke viewers: "Kalau jadi hewan, kalian mau jadi apa?" Bilang setiap hewan punya makna spiritual. Ajak jawab di chat.`,
-        };
-        return `${contextStr}\nAda ${eventData.viewerCount} viewers. ${topicPrompts[eventData.questionTopic] || topicPrompts.zodiac} Buat seru dan interaktif — kayak host yang ngobrol sama penonton. 15-25 kata.`;
-      }
-    case 'mystic_idle_callback':
-      if (eventData.callbackName) {
-        return `${contextStr}\nAda ${eventData.viewerCount} viewers. Sudah ${eventData.streamMinutes} menit live. Tadi ${eventData.callbackMinutesAgo || 'beberapa'} menit lalu Eyang bacain ${eventData.callbackSummary}. Callback singkat — "tadi Eyang bilang soal..." lalu tambahkan satu update atau insight baru. Kalau viewer masih di live, panggil namanya. Buat natural kayak lagi ngobrol. 15-25 kata.`;
-      }
-      return `${contextStr}\nAda ${eventData.viewerCount} viewers. Sudah ${eventData.streamMinutes || 0} menit live bersama. Comment soal perjalanan malam ini — berapa readings sudah dilakukan (${eventData.totalReadings || 0}), energi viewers, momen seru. Bikin viewers merasa bagian dari sesuatu. 15-20 kata.`;
-    case 'mystic_flood_acknowledge':
-      return `${contextStr}\nLive lagi ramai — ${eventData.viewerCount} viewers dan ${eventData.queueLength} orang antri reading! Excited tapi kasih tahu sabar, Eyang bacain satu-satu. Mau didahuluin? Kirim gift lebih besar! 15-25 kata.`;
-    case 'mystic_zodiac_reply':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Dia bilang: "${eventData.comment || eventData.zodiac}". Zodiak: ${eventData.zodiac} ${eventData.symbol}, elemen ${eventData.element}. Bagi pembacaan singkat: 2-3 sifat utama zodiak itu, satu keunikan, dan satu nasihat hari ini. Buat personal dan hangat. JANGAN suruh kirim gift. 20-30 kata.`;
-    case 'mystic_jodoh_ask':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"!${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Dia mau cek jodoh tapi belum sebut pasangan/crush/gebetan. Tanya singkat: siapa nama orang yang mau dicek? Suruh tulis nama dia di chat. Boleh juga tanya status dia — single, pacaran, atau sudah menikah. Playful dan penasaran. JANGAN suruh kirim gift dulu. 15-20 kata.`;
-    case 'mystic_jodoh_partner':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"!${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Dia mau cek jodoh sama "${eventData.partnerName}". Acknowledge singkat — bilang kamu lihat koneksi di bola kristal antara ${eventData.name} dan ${eventData.partnerName}. Kasih satu clue misterius tapi JANGAN kasih ramalan penuh. Bilang kirim gift biar Eyang buka kartu tarot buat baca jodoh mereka lebih dalam. 15-25 kata.`;
-    case 'mystic_question_tease':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"!${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Dia nanya: "${eventData.question}". Eyang lihat bola kristal bergetar — ada jawaban tapi belum jelas. Kasih SATU clue misterius yang nyambung sama pertanyaannya (bukan jawaban lengkap). Contoh: "Eyang lihat bayangan angka 3..." atau "Ada cahaya dari arah barat...". Lalu bilang kirim gift biar Eyang buka kartu tarot dan jawab lebih detail. 15-20 kata.`;
-    case 'mystic_question_reply':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Nanya: "${eventData.question}". Jawab pertanyaannya pakai intuisi peramal — lihat di bola kristal, kasih jawaban yang helpful dan mysterious. JANGAN suruh kirim gift. 15-25 kata.`;
-    case 'mystic_career_reply':
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Mau tahu soal karir/rezeki: "${eventData.question}". Eyang lihat ada pergerakan di bola kristal soal rezeki dia — kasih SATU clue singkat (misalnya: "ada peluang dari orang yang tidak terduga" atau "bulan ini kunci di hari Rabu"). Lalu ajak kirim gift biar Eyang buka kartu tarot untuk detail lebih dalam. 15-20 kata.`;
-    case 'mystic_chat_reply':
-      if (eventData.isGifter) {
-        return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! VIP — sudah gift ${eventData.diamonds} diamonds. Dia bilang: "${eventData.comment}".${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Balas personal — kalau nanya, jawab spesifik pakai intuisi. Kalau comment biasa, acknowledge dan hubungkan dengan aura/nasib dia. Jangan generik. 15-25 kata.`;
-      }
-      return `${contextStr}\nViewer bernama "${eventData.name}" — PANGGIL DIA "${eventData.name}"! Dia bilang: "${eventData.comment}".${eventData.zodiac ? ` Zodiak: ${eventData.zodiac}.` : ''} Bales singkat dan NYAMBUNG sama apa yang dia bilang — jangan cuma "menarik" atau "Eyang lihat". React genuine kayak ngobrol. JANGAN suruh kirim gift. 10-15 kata.`;
 
     default:
       return `${contextStr}\nSomething happened on stream. Give a casual comment.`;
@@ -588,9 +480,8 @@ app.post('/api/voice/generate', async (req, res) => {
     const { eventType, eventData, recentContext, liveContext, viewerProfile, conversationLog, room, voiceId } = req.body;
     const userPrompt = buildCommentaryPrompt(eventType, eventData, recentContext || [], liveContext, viewerProfile, conversationLog);
 
-    // Use Nurin Mystic personality for mystic events, Neo for everything else
-    const isMystic = eventType?.startsWith('mystic_');
-    const systemPrompt = isMystic ? NURIN_MYSTIC_PROMPT : NEO_PERSONALITY_PROMPT;
+    // Always use Neo personality (mystic system removed)
+    const systemPrompt = NEO_PERSONALITY_PROMPT;
 
     // Step 1: GPT-4o-mini -> commentary text
     const chatRes = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -661,19 +552,10 @@ app.post('/api/voice/generate', async (req, res) => {
 
     // 2b: OpenAI TTS fallback
     // Available voices: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer, verse
-    // Best for Eyang: ash (warm deep), sage (calm wise), coral (warm), ballad (expressive)
     if (!ttsBuffer) {
       try {
-        const openaiVoice = req.body.openaiVoice || (isMystic ? 'ash' : 'nova');
-        // Voice instructions tuned per voice for best delivery
-        const mysticInstructions = {
-          echo: 'Speak as a mystical Indonesian fortune teller. Soft, whispery and mysterious. Slow pace with dramatic pauses before key revelations. Natural Bahasa Indonesia flow.',
-          ash: 'Speak as a warm, wise Indonesian elder (Eyang). Deep gentle voice with gravitas. Slow, deliberate pacing. Natural Bahasa Indonesia rhythm with warmth.',
-          default: 'Speak as a wise Indonesian fortune teller (Eyang). Mysterious but warm tone. Slow dramatic delivery with natural Bahasa Indonesia rhythm.',
-        };
-        const voiceInstructions = isMystic
-          ? (mysticInstructions[openaiVoice] || mysticInstructions.default)
-          : 'Casual, friendly Malaysian male voice. Natural and warm.';
+        const openaiVoice = req.body.openaiVoice || 'nova';
+        const voiceInstructions = 'Casual, friendly voice. Natural and warm.';
         const openaiTtsRes = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
           headers: {

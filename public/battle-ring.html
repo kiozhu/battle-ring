@@ -156,7 +156,7 @@
     #guidePanel {
       position: absolute; left: 8px; top: 44px;
       z-index: 100; pointer-events: none;
-      display: flex; flex-direction: column; gap: 3px; width: 130px;
+      display: flex; flex-direction: column; gap: 3px; width: 180px;
     }
     .guide-item {
       background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
@@ -169,13 +169,11 @@
     .guide-desc { font-size: 10px; color: #999; line-height: 1.1; }
     .guide-divider { height: 1px; background: rgba(255,136,0,0.15); margin: 1px 0; }
     .guide-gift {
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
-      border-radius: 8px; padding: 3px 6px;
-      border: 1px solid rgba(255,136,0,0.12);
-      display: flex; align-items: center; gap: 5px;
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 0;
     }
-    .guide-gift .g-tier { font-size: 10px; color: #ff8800; font-weight: 700; white-space: nowrap; }
-    .guide-gift .g-name { font-size: 10px; color: #ccc; }
+    .guide-gift .g-emoji { font-size: 22px; }
+    .guide-gift .g-label { font-size: 17px; color: #fff; font-weight: 700; }
     @keyframes tipIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Power flash overlay */
@@ -281,20 +279,16 @@
       </div>
       <div class="guide-divider"></div>
       <div class="guide-gift">
-        <div class="g-tier">🌹 1-10</div>
-        <div class="g-name">Power Up</div>
+        <span class="g-emoji">🌹</span><span class="g-label">= Power Up</span>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🍩 11-99</div>
-        <div class="g-name">Slam</div>
+        <span class="g-emoji">🍩</span><span class="g-label">= Slam</span>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🦁 100+</div>
-        <div class="g-name">Shockwave</div>
+        <span class="g-emoji">🦁</span><span class="g-label">= Shockwave</span>
       </div>
       <div class="guide-gift">
-        <div class="g-tier">🐋 500+</div>
-        <div class="g-name">Meteor!</div>
+        <span class="g-emoji">🐋</span><span class="g-label">= Meteor!</span>
       </div>
     </div>
 
@@ -388,7 +382,7 @@ const ARENA_END_RADIUS = 0.5;    // circle shrinks all the way down
 const ROUND_DURATION = 90;
 const MIN_ROUND_DURATION = 30; // Minimal 30 detik sebelum round bisa berakhir       // total round time in seconds
 const ROUND_COUNTDOWN = 5;
-const MIN_PLAYERS_TO_START = 1;
+const MIN_PLAYERS_TO_START = 3;
 const INTERMISSION_TIME = 8;
 const GRAVITY = 20;
 const BASE_PUSH = 2.5;
@@ -1171,19 +1165,28 @@ let botRespawnCount = 0;
 let botsReady = false;
 const BOT_NAMES = [
   // Nama Indonesia populer
-  'Budi', 'Andi', 'Sari', 'Dewi', 'Rizky', 'Putri', 'Agus', 'Rina', 'Dimas', 'Lestari',
+  'Budi', 'Andi', 'Sari', 'Rizky', 'Putri', 'Agus', 'Rina', 'Dimas', 'Lestari',
   'Bayu', 'Citra', 'Eka', 'Fitri', 'Gilang', 'Hana', 'Irfan', 'Joko', 'Kartika', 'Lukman',
-  'Maya', 'Nanda', 'Oscar', 'Putra', 'Qori', 'Rina', 'Sinta', 'Tono', 'Ulya', 'Vina',
-  'Wawan', 'Xena', 'Yoga', 'Zahra', 'Aldi', 'Bella', 'Cahya', 'Danu', 'Eka', 'Fajar',
+  'Maya', 'Nanda', 'Oscar', 'Putra', 'Qori', 'Sinta', 'Tono', 'Ulya', 'Vina',
+  'Wawan', 'Xena', 'Yoga', 'Zahra', 'Aldi', 'Bella', 'Cahya', 'Danu', 'Fajar',
   'Gita', 'Hadi', 'Indra', 'Jihan', 'Kurnia', 'Lia', 'Mega', 'Nia', 'Omar', 'Prita',
+  // Nama tambahan Indonesia
+  'Adit', 'Bima', 'Citra', 'Deni', 'Eko', 'Fina', 'Gilang', 'Hendra', 'Imam', 'Jarwo',
+  'Kevin', 'Laras', 'Melati', 'Niko', 'Owi', 'Putri', 'Rahmat', 'Salsa', 'Tari', 'Udin',
+  'Vino', 'Wati', 'Yanti', 'Zidan', 'Amel', 'Bram', 'Cakra', 'Dian', 'Ervan', 'Farhan',
+  'Ghina', 'Hana', 'Ica', 'Jaka', 'Kania', 'Leo', 'Mega', 'Nabil', 'Opik', 'Putra',
   // Nama panggilan/gaul
   'Abe', 'Bowo', 'Coki', 'Dede', 'Emon', 'Fafa', 'Gugun', 'Hengky', 'Iwan', 'Jeki',
   'Koko', 'Luki', 'Memet', 'Nopal', 'Ojon', 'Pepeng', 'Rian', 'Sultan', 'Tegar', 'Ucok',
   'Vicky', 'Wira', 'Yusuf', 'Zaki', 'Aji', 'Beni', 'Candra', 'Dwiki', 'Erik', 'Fadli',
+  'Gerry', 'Heri', 'Ilham', 'Joni', 'Kiki', 'Lutfi', 'Maman', 'Nando', 'Opung', 'Pandu',
   // Nama karakter/fun
   'Raja_Banteng', 'Ratu_Lebah', 'Si_Ganteng', 'Si_Cantik', 'Jagoan_Kampung',
   'Pemain_Pro', 'Master_Gaming', 'Sultan_Battle', 'Raja_Arena', 'Dewa_Fight',
-  'Pahlawan', 'Penantang', 'Petarung', 'Juara', 'Legenda'
+  'Pahlawan', 'Penantang', 'Petarung', 'Juara', 'Legenda',
+  'Ksatria_Hitam', 'Naga_Api', 'Elang_Laut', 'Harimau_Sumatra', 'Gajah_Perkasa',
+  'Serigala_Malam', 'Rajawali_Emas', 'Macan_Tutul', 'Burung_Garuda', 'Kuda_Lumping',
+  'Si_Badak', 'Kapten_Arena', 'Ratu_Selatan', 'Pangeran_Timur', 'Putri_Barat'
 ];
 let botCount = 0;
 let roundTimer = 0;
@@ -1342,7 +1345,7 @@ function setRoundState(state) {
 // ===== BOT SYSTEM =====
 function spawnBot() {
   botCount++;
-  const name = BOT_NAMES[botCount % BOT_NAMES.length];
+  const name = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
   const botData = {
     uniqueId: `bot_${botCount}_${Date.now()}`,
     nickname: name,
@@ -1388,23 +1391,25 @@ function testGift(tier) {
     return;
   }
   const target = alive[Math.floor(Math.random() * alive.length)];
-  
+
+  // Sinkron dengan GIFT_MAP — gunakan data asli
   const giftData = {
-    'small': { diamonds: 5, name: 'Rose' },
-    'medium': { diamonds: 50, name: 'Donut' },
-    'big': { diamonds: 200, name: 'Lion' },
+    'small': { diamonds: 1, name: 'Rose' },
+    'medium': { diamonds: 15, name: 'Donut' },
+    'big': { diamonds: 100, name: 'Lion' },
     'vip': { diamonds: 500, name: 'Whale' }
   };
-  
+
   const gift = giftData[tier] || giftData['small'];
-  handleGift({ 
-    uniqueId: target.uniqueId, 
-    nickname: target.nickname, 
-    diamondCount: gift.diamonds, 
-    giftName: gift.name, 
-    repeatCount: 1 
+  handleGift({
+    uniqueId: target.uniqueId,
+    nickname: target.nickname,
+    diamondCount: gift.diamonds,
+    giftName: gift.name,
+    repeatCount: 1
+  }).catch(err => {
+    console.warn('[testGift] Error:', err);
   });
-  addNotification(`Test gift ${tier}: ${gift.name} (${gift.diamonds}💎)`, 'gift');
 }
 
 // Auto-logic bot bergerak
@@ -1450,25 +1455,34 @@ function updateRoundState(dt) {
     case 'WAITING': {
       const alive = countAlivePlayers();
       waitingTimer += dt;
-      
+
       if (alive >= MIN_PLAYERS_TO_START) {
+        // Sudah cukup pemain, langsung mulai
         setRoundState('COUNTDOWN');
         waitingTimer = 0;
-      } else if (waitingTimer >= WAITING_TIMEOUT && !botsEnabled) {
-        // 5 detik habis, spawn bot
-        botsEnabled = true; // Set SEBELUM spawn supaya tidak diulang
-        spawnBots(); // async, tapi botsEnabled sudah true
+      } else if (alive >= 1 && !botsEnabled) {
+        // Ada viewer tapi kurang dari 3 → langsung spawn bot
+        const botsNeeded = MIN_PLAYERS_TO_START - alive;
+        botsEnabled = true;
+        spawnBots(botsNeeded);
+        addNotification(`${botsNeeded} bot masuk bantu!`, 'power');
       } else if (botsReady && countAlivePlayers() >= 1) {
-        // Bot sudah siap, mulai
+        // Bot sudah siap + ada viewer, mulai
         setRoundState('COUNTDOWN');
         waitingTimer = 0;
         botsReady = false;
-      } else if (waitingTimer >= 20) {
-        // Timeout 20 detik — force start walau bot gagal
+      } else if (waitingTimer >= 5 && !botsEnabled) {
+        // 5 detik habis, ga ada viewer → spawn bot aja
+        botsEnabled = true;
+        spawnBots(3);
+        addNotification('Bot masuk arena!', 'power');
+      } else if (botsReady) {
+        // Bot sudah siap (walau ga ada viewer), mulai aja
         setRoundState('COUNTDOWN');
         waitingTimer = 0;
+        botsReady = false;
       } else {
-        document.getElementById('roundTimer').textContent = botsEnabled ? 'Memuat...' : `Menunggu... (${Math.ceil(Math.max(0, WAITING_TIMEOUT - waitingTimer))}s)`;
+        document.getElementById('roundTimer').textContent = botsEnabled ? 'Memuat...' : `Menunggu... (${Math.ceil(Math.max(0, 5 - waitingTimer))}s)`;
       }
       break;
     }
@@ -1513,7 +1527,22 @@ function updateRoundState(dt) {
       const alive = countAlivePlayers();
       const roundElapsed = ROUND_DURATION - timeLeft;
       document.getElementById('aliveCount').textContent = alive;
-      
+
+      // Auto-spawn bots kalau kurang dari 3 pemain di tengah permainan
+      if (alive < 3 && botsEnabled && botRespawnCount < 5 && roundElapsed > 5) {
+        const botsAlive = Array.from(players.values()).filter(p =>
+          p.uniqueId.startsWith('bot_') && p.alive
+        ).length;
+        const viewersAlive = alive - botsAlive;
+        // Spawn bot untuk jaga minimal 3 pemain total
+        const botsNeeded = 3 - alive;
+        if (botsNeeded > 0) {
+          spawnBots(botsNeeded);
+          botRespawnCount++;
+          addNotification(`${botsNeeded} petarung baru masuk!`, 'power');
+        }
+      }
+
       if (alive <= 1 && roundElapsed >= MIN_ROUND_DURATION) {
         // Last player standing — end only after minimum duration
         if (alive === 0) {
@@ -1530,7 +1559,7 @@ function updateRoundState(dt) {
       } else if (alive <= 1 && roundElapsed < MIN_ROUND_DURATION) {
         // Still too early — spawn more bots if needed
         if (botsEnabled && alive <= 1) {
-          const botsAlive = Array.from(players.values()).filter(p => 
+          const botsAlive = Array.from(players.values()).filter(p =>
             p.uniqueId.startsWith('bot_') && p.alive
           ).length;
           if (botsAlive === 0 && botRespawnCount < 5) {
@@ -1554,7 +1583,7 @@ function updateRoundState(dt) {
     case 'INTERMISSION': {
       roundTimer -= dt;
       document.getElementById('roundTimer').textContent = Math.ceil(Math.max(0, roundTimer));
-      
+
       // Auto-ganti tema setiap 3 round
       if (roundNumber % 3 === 0 && roundTimer <= 0) {
         const themes = Object.keys(ARENA_THEMES);
@@ -1562,8 +1591,16 @@ function updateRoundState(dt) {
         const nextTheme = themes[(currentIndex + 1) % themes.length];
         applyArenaTheme(nextTheme);
       }
-      
+
       if (roundTimer <= 0) {
+        // Pastikan minimal 3 pemain sebelum round berikutnya
+        const alive = countAlivePlayers();
+        if (alive < 3) {
+          const botsNeeded = 3 - alive;
+          spawnBots(botsNeeded);
+          botsEnabled = true;
+          addNotification(`${botsNeeded} petarung baru masuk!`, 'power');
+        }
         if (countAlivePlayers() >= MIN_PLAYERS_TO_START || players.size >= MIN_PLAYERS_TO_START) {
           setRoundState('COUNTDOWN');
         } else {
@@ -2500,15 +2537,15 @@ async function handleGift(data) {
       players.forEach(other => {
         if (other.uniqueId === p.uniqueId || !other.alive) return;
         const dx = other.x - p.x, dz = other.z - p.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        if (dist < 8 && dist > 0.1) {
-          const force = 8 * (1 - dist / 8);
+        const dist = Math.sqrt(dx * dx + dz * dz) || 1;
+        const force = 10 * (1 - dist / 12);
+        if (dist < 12 && dist > 0.1) {
           other.vx += (dx / dist) * force;
           other.vz += (dz / dist) * force;
-          other.vy = 5;
+          other.vy = 6;
           other.onGround = false;
           other.lastPushedBy = p.uniqueId;
-          if (dist < 3) {
+          if (dist < 4) {
             setPlayerAnim(other, 'death', 4); other.hitTimer = getAnimDuration(other, 'death', 4.0);
           } else {
             setPlayerAnim(other, 'hit', 4); other.hitTimer = getAnimDuration(other, 'hit');
@@ -2516,7 +2553,7 @@ async function handleGift(data) {
           other.punchTimer = 0;
         }
       });
-      shakeCamera(1.0);
+      shakeCamera(1.5);
     }, 500);
     
     addNotification(`🌪️ <strong>${p.nickname}</strong> memanggil TORNADO!`, 'gift');
@@ -2687,6 +2724,48 @@ function showChatBubble(player, text) {
   }, 3000);
 }
 
+// Banter bubble — lebih kecil, style beda dari chat asli
+// Returns hide function supaya bisa di-call pas TTS selesai
+function showBanterBubble(player, text) {
+  if (!player.chatSprite || !player.chatCanvas) return () => {};
+  if (!text || !text.trim()) return () => {};
+  const c = player.chatCanvas;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 512, 128);
+
+  // Truncate — banter boleh lebih panjang dari chat
+  const msg = text.length > 30 ? text.slice(0, 30) + '...' : text;
+
+  // Bubble background — ungu gelap transparan
+  ctx.fillStyle = 'rgba(80,40,120,0.65)';
+  ctx.beginPath();
+  ctx.roundRect(20, 20, 472, 72, 16);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,150,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Text — lebih kecil, warna ungu terang
+  ctx.font = '26px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#d4b8ff';
+  ctx.fillText(msg, 256, 66);
+
+  player.chatSprite.material.map.needsUpdate = true;
+  player.chatSprite.visible = true;
+
+  // Clear timeout lama kalau ada
+  if (player._chatTimeout) clearTimeout(player._chatTimeout);
+
+  // Return hide function — dipanggil pas TTS selesai
+  return () => {
+    if (player._chatTimeout) clearTimeout(player._chatTimeout);
+    player._chatTimeout = setTimeout(() => {
+      if (player.chatSprite) player.chatSprite.visible = false;
+    }, 300); // Delay 300ms biar ga abrupt
+  };
+}
+
 // ===== NOTIFICATIONS =====
 function addNotification(html, type = '') {
   const container = document.getElementById('notifications');
@@ -2757,7 +2836,7 @@ function showGiftBanner(nickname, tierName, tierColor, diamonds) {
   document.getElementById('giftTier').style.textShadow = `0 0 20px ${tierColor}`;
   document.getElementById('giftUser').textContent = nickname;
   document.getElementById('giftUser').style.color = '#fff';
-  document.getElementById('giftDiamonds').textContent = `${diamonds} diamonds`;
+  document.getElementById('giftDiamonds').textContent = '';
   document.getElementById('giftDiamonds').style.color = tierColor;
   
   // Particle effect
@@ -4080,7 +4159,7 @@ class AnnouncerTTS {
 const announcer = new AnnouncerTTS();
 window.announcer = announcer;  // Expose untuk banter TTS
 
-// ===== IDLE BANTER SYSTEM - TTS Sapaan saat tidak ada interaksi =====
+// ===== IDLE BANTER SYSTEM v2 - Varied TTS dialogues with context awareness =====
 class BanterTTS {
   constructor() {
     this.synth = window.speechSynthesis;
@@ -4088,103 +4167,479 @@ class BanterTTS {
     this.femaleVoice = null;
     this.enabled = true;
     this.lastInteraction = Date.now();
-    this.banterInterval = null;
-    this.banterIndex = 0;
-    
+    this.history = [];       // Track last 20 dialogue indices to avoid repeat
+    this.maxHistory = 20;
+    this.lastCategory = '';  // Category cooldown
+    this.banterCount = 0;
+    this.isSpeaking = false; // Prevent overlapping banter
+
     this.synth.onvoiceschanged = () => this.loadVoices();
     this.loadVoices();
     this.startIdleTimer();
   }
-  
+
   loadVoices() {
     const voices = this.synth.getVoices();
     // Suara laki-laki Indonesia
-    this.maleVoice = voices.find(v => 
+    this.maleVoice = voices.find(v =>
       v.lang.startsWith('id') && !v.name.includes('Female') && !v.name.includes('Perempuan')
-    ) || voices.find(v => v.lang.startsWith('id')) || voices.find(v => 
+    ) || voices.find(v => v.lang.startsWith('id')) || voices.find(v =>
       v.name.includes('Google UK English Male') || v.name.includes('Microsoft David')
     );
     // Suara perempuan Indonesia
-    this.femaleVoice = voices.find(v => 
+    this.femaleVoice = voices.find(v =>
       v.lang.startsWith('id') && (v.name.includes('Female') || v.name.includes('Perempuan'))
-    ) || voices.find(v => v.lang.startsWith('id') && v !== this.maleVoice) || voices.find(v => 
+    ) || voices.find(v => v.lang.startsWith('id') && v !== this.maleVoice) || voices.find(v =>
       v.name.includes('Google UK English Female') || v.name.includes('Microsoft Zira')
     );
+    // Flag: kalau pakai voice yang sama, bedakan pakai pitch
+    this.sameVoice = (this.maleVoice && this.femaleVoice && this.maleVoice === this.femaleVoice);
+    console.log('[BanterTTS] Male:', this.maleVoice?.name, '| Female:', this.femaleVoice?.name, '| SameVoice:', this.sameVoice);
   }
-  
+
   notifyInteraction() {
     this.lastInteraction = Date.now();
   }
-  
+
   startIdleTimer() {
-    // Cek setiap 2 detik apakah ada interaksi
     setInterval(() => {
-      if (!this.enabled || window.announcer.isBusy) return;
+      if (!this.enabled || window.announcer.isBusy || this.isSpeaking) return;
       const idleTime = Date.now() - this.lastInteraction;
-      // Jika idle lebih dari 3 detik, mulai banter
       if (idleTime > 3000) {
         this.speakBanter();
       }
     }, 2000);
   }
-  
-  speakBanter() {
+
+  // Get game context for context-aware dialogues
+  getContext() {
     const players = Array.from(window.players?.values() || []).filter(p => p.alive);
+    const streamMinutes = Math.floor((Date.now() - (this._startTime || Date.now())) / 60000);
+    return {
+      players,
+      playerCount: players.length,
+      roundState: typeof roundState !== 'undefined' ? roundState : 'UNKNOWN',
+      roundNumber: typeof roundNumber !== 'undefined' ? roundNumber : 0,
+      currentTheme: typeof currentTheme !== 'undefined' ? currentTheme : 'unknown',
+      streamMinutes,
+    };
+  }
+
+  // Build all dialogues with player names and context injected
+  buildDialogues(p1, p2, ctx) {
+    const n1 = p1.nickname, n2 = p2.nickname;
+    const hp1 = p1.hp || 0, hp2 = p2.hp || 0;
+    const lowHp = hp1 < 30 || hp2 < 30;
+    const bothLow = hp1 < 30 && hp2 < 30;
+    const dominated = hp2 > hp1 * 1.5;
+    const close = Math.abs(hp1 - hp2) < 10;
+
+    return [
+      // === KATEGORI 1: Sapaan (12) ===
+      { cat: 'sapaan', type: 'dialog', male: `Halo ${n2}! Siap bertarung?`, female: `Siap ${n1}! Aku tidak akan kalah!` },
+      { cat: 'sapaan', type: 'dialog', male: `${n2}! Kamu berani lawan aku?`, female: `Berani dong ${n1}! Ayo!` },
+      { cat: 'sapaan', type: 'dialog', male: `Wah ${n2} kelihatan kuat hari ini!`, female: `Terima kasih ${n1}! Kamu juga!` },
+      { cat: 'sapaan', type: 'dialog', male: `Selamat datang di arena, ${n2}!`, female: `Siap tempur, ${n1}!` },
+      { cat: 'sapaan', type: 'dialog', male: `${n2}! Lama tidak jumpa!`, female: `Iya ${n1}! Kangen bertarung!` },
+      { cat: 'sapaan', type: 'dialog', male: `Akhirnya kita bertemu lagi, ${n2}!`, female: `Siap ${n1}! Kali ini aku menang!` },
+      { cat: 'sapaan', type: 'dialog', male: `${n2}! Energimu hari ini beda!`, female: `Tentu ${n1}! Aku sudah siap seratus persen!` },
+      { cat: 'sapaan', type: 'dialog', male: `Halo ${n2}! Sudah pemanasan?`, female: `Sudah ${n1}! Otot-ototku siap!` },
+      { cat: 'sapaan', type: 'dialog', male: `${n2}! Senang bisa lawan kamu!`, female: `Sama ${n1}! Ini bakal seru!` },
+      { cat: 'sapaan', type: 'dialog', male: `Wah ${n2} datang dengan aura berbeda!`, female: `Percaya diri, ${n1}!` },
+      { cat: 'sapaan', type: 'dialog', male: `Hey ${n2}! Siap mental?`, female: `Mental baja, ${n1}!` },
+      { cat: 'sapaan', type: 'dialog', male: `${n2}! Ayo kita beri tontonan bagus!`, female: `Setuju ${n1}! Show time!` },
+
+      // === KATEGORI 2: Taunt / Tantangan (12) ===
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Ayo maju! Jangan lari!`, female: `Aku tidak lari ${n1}! Siap-siap kalah!` },
+      { cat: 'taunt', type: 'dialog', male: `Siapa yang mau lawan aku?`, female: `Aku ${n1}! Ayo bertarung!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Bersiaplah!`, female: `Aku sudah siap ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Kamu yakin mau lawan aku?`, female: `Yakin banget ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `Aku tidak akan kasih ampun, ${n2}!`, female: `Jangan ${n1}! Aku juga tidak akan!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Lihat tinjuku!`, female: `Tinjuku lebih keras, ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `Siapa yang kalah duluan ya?`, female: `Bukan aku, ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Jangan sampai nangis ya!`, female: `Aku tidak pernah nangis, ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `Hari ini aku yang menang, ${n2}!`, female: `Mimpi ${n1}! Ini hariku!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Kamu sudah siap mental?`, female: `Sudah ${n1}! Ayo buktikan!` },
+      { cat: 'taunt', type: 'dialog', male: `Aku tidak akan mundur, ${n2}!`, female: `Coba saja ${n1}!` },
+      { cat: 'taunt', type: 'dialog', male: `${n2}! Arena ini milikku!`, female: `Kita lihat saja, ${n1}!` },
+
+      // === KATEGORI 3: Obrolan Ringan (15) ===
+      { cat: 'ringan', type: 'dialog', male: `Cuaca bagus hari ini ya ${n2}!`, female: `Iya ${n1}! Cocok buat bertarung!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Mau makan apa nanti?`, female: `Mau makan kemenangan ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Siapa yang menang ya hari ini?`, female: `Pasti aku ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Kamu sudah latihan?`, female: `Sudah ${n1}! Ayo buktikan!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Tadi lihat apa di jalan?`, female: `Aku lihat jalan menuju kemenangan, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Hari ini hari yang baik buat bertarung!`, female: `Setiap hari baik kalau lawan kamu, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Kamu tim pagi atau malam?`, female: `Tim bertarung, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Tadi aku dengar lagu bagus!`, female: `Lagu kemenangan, ${n1}?` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Sudah sarapan?`, female: `Sudah! Makan semangat, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Aku punya firasat bagus hari ini!`, female: `Firasat kalah, ${n1}? Haha!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Kamu percaya takdir?`, female: `Percaya! Takdirku menang, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Malam ini bintang-bintang mendukungku!`, female: `Bintang mendukung yang lebih kuat, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Kamu pernah mimpi aneh?`, female: `Mimpi mengalahkan kamu, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `Aku suka aroma arena ini!`, female: `Aroma kemenangan, ${n1}!` },
+      { cat: 'ringan', type: 'dialog', male: `${n2}! Siapa idolamu?`, female: `Pemenang, ${n1}! Seperti aku!` },
+
+      // === KATEGORI 4: Motivasi (10) ===
+      { cat: 'motivasi', type: 'dialog', male: `Ayo semangat ${n2}!`, female: `Semangat ${n1}! Kita bisa!` },
+      { cat: 'motivasi', type: 'dialog', male: `${n2}! Jangan menyerah!`, female: `Tidak akan ${n1}!` },
+      { cat: 'motivasi', type: 'dialog', male: `Siapa yang mau jadi juara?`, female: `Aku ${n1}! Pasti aku!` },
+      { cat: 'motivasi', type: 'dialog', male: `${n2}! Ayo tunjukkan kekuatanmu!`, female: `Siap ${n1}! Lihat ini!` },
+      { cat: 'motivasi', type: 'dialog', male: `Kita bertarung dengan terhormat!`, female: `Setuju ${n1}! Fair play!` },
+      { cat: 'motivasi', type: 'dialog', male: `${n2}! Berikan yang terbaik!`, female: `Selalu ${n1}! Seratus persen!` },
+      { cat: 'motivasi', type: 'dialog', male: `Yang kuat yang menang!`, female: `Aku yang paling kuat, ${n1}!` },
+      { cat: 'motivasi', type: 'dialog', male: `${n2}! Jangan ragu!`, female: `Tidak pernah ragu, ${n1}!` },
+      { cat: 'motivasi', type: 'dialog', male: `Ini saatnya membuktikan!`, female: `Sudah waktunya, ${n1}!` },
+      { cat: 'motivasi', type: 'dialog', male: `${n2}! Fight with honor!`, female: `Always, ${n1}!` },
+
+      // === KATEGORI 5: Reaksi Game / Pertarungan (15) - context-aware ===
+      { cat: 'reaksi', type: 'dialog', cond: dominated, male: `Wah ${n2} lagi dominan!`, female: `Memang aku kuat, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: lowHp, male: `${n2}! HP-mu tinggal sedikit!`, female: `Masih cukup buat kalahkan kamu, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: close, male: `Pertarungan ini seru banget!`, female: `Belum selesai, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `${n2}! Kok bisa sekuat itu!`, female: `Latihan keras, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `Wah hampir kena!`, female: `Beruntung ${n1}! Tapi tidak lama!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `${n2}! Pertahananmu bagus!`, female: `Tapi seranganmu juga, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: bothLow, male: `Siapa yang habis duluan ya?`, female: `Bukan aku, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: close, male: `${n2}! Kamu benar-benar tangguh!`, female: `Kamu juga ${n1}! Ini seimbang!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `Pukulan yang bagus, ${n2}!`, female: `Terima kasih ${n1}! Ini belum semua!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `Aku hampir jatuh tadi!`, female: `Hati-hati ${n1}! Tapi aku tidak kasih ampun!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `${n2}! Stamina-mu luar biasa!`, female: `Aku bisa seharian, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `Pertarungan ini bakal jadi legenda!`, female: `Sudah pasti, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `${n2}! Kok kamu tahan terus!`, female: `Keras kepala, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: true, male: `Wah serangan balik yang cepat!`, female: `Refleks ku, ${n1}!` },
+      { cat: 'reaksi', type: 'dialog', cond: close, male: `Siapa yang lebih kuat ya?`, female: `Sudah jelas, ${n1}! Aku!` },
+
+      // === KATEGORI 6: Komentar Arena (8) - context-aware ===
+      { cat: 'arena', type: 'dialog', male: `Arena ini keren ya ${n2}!`, female: `Iya ${n1}! Cocok buat pertarungan epik!` },
+      { cat: 'arena', type: 'dialog', male: `${n2}! Kamu suka arena ini?`, female: `Suka! Tapi lebih suka menang, ${n1}!` },
+      { cat: 'arena', type: 'dialog', male: `Suasana di sini berbeda ya!`, female: `Lebih seru, ${n1}!` },
+      { cat: 'arena', type: 'dialog', male: `${n2}! Arena ini membawa hoki!`, female: `Hoki untuk siapa, ${n1}? Haha!` },
+      { cat: 'arena', type: 'dialog', male: `Wah cahayanya bagus!`, female: `Cocok buat pertarungan terakhir, ${n1}!` },
+      { cat: 'arena', type: 'dialog', male: `${n2}! Arena ini punya energi khusus!`, female: `Aku bisa merasakannya, ${n1}!` },
+      { cat: 'arena', type: 'dialog', male: `Aku suka suasana gelap!`, female: `Gelap tapi penuh semangat, ${n1}!` },
+      { cat: 'arena', type: 'dialog', male: `Terang bikin semangat!`, female: `Terang seperti masa depanku, ${n1}!` },
+
+      // === KATEGORI 7: Humor / Lucu (12) ===
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu makan apa kok kuat banget?`, female: `Makan semangat, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `Aku lupa bawa bekal!`, female: `Kekalahanmu jadi bekal, ${n1}! Haha!` },
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu punya jurus andalan?`, female: `Ada! Jurus rahasia, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `Kalau aku menang, kamu traktir!`, female: `Kalau aku menang, kamu yang traktir, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu pernah kalah?`, female: `Pernah! Tapi bukan dari kamu, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `Aku baru ingat ada janji nanti!`, female: `Janji kalah, ${n1}? Haha!` },
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu kok bisa secepat itu?`, female: `Rahasia, ${n1}! Tapi aku bisa lebih cepat!` },
+      { cat: 'humor', type: 'dialog', male: `Tadi aku hampir tertidur!`, female: `Tidur yang nyenyak setelah kalah, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu pakai sepatu apa?`, female: `Sepatu pemenang, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `Aku dengar suara perutku!`, female: `Itu suara kekalahan mendekat, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `${n2}! Kamu punya hobi?`, female: `Hobi menang, ${n1}!` },
+      { cat: 'humor', type: 'dialog', male: `Kalau kita tim, pasti tidak terkalahkan!`, female: `Tapi kita musuh, ${n1}! Jadi aku yang menang!` },
+
+      // === KATEGORI 8: Penonton / Viewers (8) - context-aware ===
+      { cat: 'penonton', type: 'dialog', male: `Wah banyak yang nonton ya ${n2}!`, female: `Ayo kasih show bagus, ${n1}!` },
+      { cat: 'penonton', type: 'dialog', male: `${n2}! Sapa penonton dong!`, female: `Halo semuanya! Terima kasih sudah nonton!` },
+      { cat: 'penonton', type: 'dialog', male: `Penonton mau siapa yang menang?`, female: `Pasti pilih aku, ${n1}!` },
+      { cat: 'penonton', type: 'dialog', male: `${n2}! Kita performa buat mereka!`, female: `Sudah pasti, ${n1}! Give them a show!` },
+      { cat: 'penonton', type: 'dialog', male: `Wah ada yang baru masuk!`, female: `Selamat datang! Nikmati pertarungannya!` },
+      { cat: 'penonton', type: 'dialog', male: `${n2}! Viewers kita bertambah!`, female: `Karena pertarungan kita seru, ${n1}!` },
+      { cat: 'penonton', type: 'dialog', male: `Terima kasih sudah nonton!`, female: `Kalian membuat semangat kami!` },
+      { cat: 'penonton', type: 'dialog', male: `${n2}! Jangan kecewakan penonton!`, female: `Tidak akan! Ini untuk kalian!` },
+
+      // === KATEGORI 9: Waktu / Durasi Live (8) - context-aware ===
+      { cat: 'waktu', type: 'dialog', cond: ctx.streamMinutes > 10, male: `Udah ${ctx.streamMinutes} menit nih!`, female: `Waktu berlalu cepat kalau seru, ${n1}!` },
+      { cat: 'waktu', type: 'dialog', cond: ctx.streamMinutes > 30, male: `${n2}! Masih kuat?`, female: `Selamanya, ${n1}!` },
+      { cat: 'waktu', type: 'dialog', cond: true, male: `Malam ini panjang ya!`, female: `Panjang dan seru, ${n1}!` },
+      { cat: 'waktu', type: 'dialog', male: `${n2}! Kita belum selesai!`, female: `Belum! Ini baru permulaan, ${n1}!` },
+      { cat: 'waktu', type: 'dialog', cond: ctx.streamMinutes > 60, male: `Aku mulai lelah!`, female: `Jangan menyerah, ${n1}! Kita bisa!` },
+      { cat: 'waktu', type: 'dialog', male: `${n2}! Sudah berapa ronde?`, female: `Tidak terhitung, ${n1}! Yang penting menang!` },
+      { cat: 'waktu', type: 'dialog', male: `Jam berapa sekarang?`, female: `Jam kemenangan, ${n1}!` },
+      { cat: 'waktu', type: 'dialog', cond: ctx.streamMinutes > 45, male: `${n2}! Ini marathon ya?`, female: `Sprint menuju kemenangan, ${n1}!` },
+
+      // === KATEGORI 10: Makanan / Random Life (10) ===
+      { cat: 'random', type: 'dialog', male: `${n2}! Lapar ngga?`, female: `Lapar kemenangan, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `Tadi aku makan nasi goreng!`, female: `Nasi goreng energi, ${n1}?` },
+      { cat: 'random', type: 'dialog', male: `${n2}! Minum apa?`, female: `Minum semangat, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `Aku pengen kopi!`, female: `Kopi kemenangan, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `${n2}! Kamu suka musik?`, female: `Suka! Musik pertarungan, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `Tadi aku dengar lagu bagus!`, female: `Lagu tema kita, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `${n2}! Kamu punya hewan peliharaan?`, female: `Punya! Semangat juang, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `Aku mau liburan setelah ini!`, female: `Liburan sebagai juara, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `${n2}! Film favorit?`, female: `Film aksi! Seperti pertarungan kita, ${n1}!` },
+      { cat: 'random', type: 'dialog', male: `Aku suka hujan!`, female: `Hujan berkah, ${n1}!` },
+
+      // === KATEGORI 11: Gaming References (8) ===
+      { cat: 'gaming', type: 'dialog', male: `${n2}! Ini seperti game fighting!`, female: `Lebih seru dari game, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `Kalau ini game, kita sudah boss fight!`, female: `Boss-nya aku, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `${n2}! Kamu main game apa?`, female: `Game kehidupan, ${n1}! Dan aku menang!` },
+      { cat: 'gaming', type: 'dialog', male: `Kita butuh combo attack!`, female: `Combo masing-masing, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `${n2}! Kamu player satu atau dua?`, female: `Player satu selalu, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `Ini seperti final boss!`, female: `Dan aku yang menang, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `${n2}! Kamu pakai cheat?`, female: `Cheat-nya latihan, ${n1}!` },
+      { cat: 'gaming', type: 'dialog', male: `Game over belum, ${n2}!`, female: `Belum! Masih ada continue, ${n1}!` },
+
+      // === KATEGORI 12: Narrator / Single Voice (8) - context-aware ===
+      { cat: 'narrator', type: 'narrator', text: `Pertarungan semakin memanas! Siapa yang akan bertahan?` },
+      { cat: 'narrator', type: 'narrator', text: `Dua petarung saling berhadapan! Ini bakal epik!` },
+      { cat: 'narrator', type: 'narrator', text: `Penonton menahan napas! Siapa yang menyerang duluan?` },
+      { cat: 'narrator', type: 'narrator', text: `Wah! Pukulan yang luar biasa!` },
+      { cat: 'narrator', type: 'narrator', text: `Pertahanan kokoh! Tapi sampai kapan?` },
+      { cat: 'narrator', type: 'narrator', text: `Stamina mulai terkuras! Siapa yang lebih kuat?` },
+      { cat: 'narrator', type: 'narrator', text: `Ini adalah pertarungan terbaik malam ini!` },
+      { cat: 'narrator', type: 'narrator', text: `Penonton bersorak! Pertarungan belum selesai!` },
+
+      // === KATEGORI 13: CTA / Call to Action (12) ===
+      { cat: 'cta', type: 'dialog', male: `${n2}! Follow ya biar nambah kekuatan!`, female: `Setuju ${n1}! Follow semuanya!` },
+      { cat: 'cta', type: 'dialog', male: `Eh ${n2}! Kalian belum follow?`, female: `Follow dulu ${n1}! Gratis kok!` },
+      { cat: 'cta', type: 'dialog', male: `${n2}! Ajak teman-temanmu nonton!`, female: `Makin rame makin seru, ${n1}!` },
+      { cat: 'cta', type: 'dialog', male: `Yang belum follow, follow ya!`, female: `Biar kalian bisa nonton terus, ${n1}!` },
+      { cat: 'cta', type: 'dialog', male: `${n2}! Share live ini dong!`, female: `Ayo ${n1}! Biar viral!` },
+      { cat: 'cta', type: 'dialog', male: `Eh ada yang baru masuk! Sapa dong!`, female: `Halo! Jangan lupa follow ya!` },
+      { cat: 'cta', type: 'dialog', male: `${n2}! Like dulu sebelum nonton!`, female: `Like-nya bikin semangat, ${n1}!` },
+      { cat: 'cta', type: 'dialog', male: `Kalian mau lihat jurus baru?`, female: `Follow dulu baru kasih lihat!` },
+      { cat: 'cta', type: 'dialog', male: `${n2}! Comment dong di bawah!`, female: `Ayo interaksi, ${n1}! Jangan diem aja!` },
+      { cat: 'cta', type: 'dialog', male: `Yang suka battle, follow ya!`, female: `Setiap hari ada pertarungan seru, ${n1}!` },
+      { cat: 'cta', type: 'dialog', male: `${n2}! Ajak keluarga nonton bareng!`, female: `Makin rame makin heboh, ${n1}!` },
+      { cat: 'cta', type: 'narrator', text: `Follow akun ini buat nonton pertarungan seru setiap hari! Jangan sampai ketinggalan!` },
+
+      // === KATEGORI 14: Ngobrolin Kehidupan (12) ===
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Kamu bangun jam berapa?`, female: `Bangun jam kemenangan, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `Tadi aku lihat kucing lucu!`, female: `Kucing mana bisa lebih lucu dari aku, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Kamu suka musim apa?`, female: `Musim menang, ${n1}! Setiap hari!` },
+      { cat: 'hidup', type: 'dialog', male: `Aku pengen jalan-jalan ke pantai!`, female: `Pantai mana? Pantai kemenangan, ${n1}?` },
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Kamu tim kopi atau teh?`, female: `Tim semangat, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `Tadi hujan deras ya!`, female: `Hujan nggak bisa padamkan semangatku, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Kamu suka masak?`, female: `Masak strategi buat kalahkan kamu, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `Aku baru selesai olahraga!`, female: `Olahraga terbaik ya bertarung, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Pernah ke Jakarta?`, female: `Pernah! Tapi arena ini lebih seru, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `Aku suka sunrise!`, female: `Sunset lebih bagus, ${n1}! Kayak kemenangan kita!` },
+      { cat: 'hidup', type: 'dialog', male: `${n2}! Kamu takut hantu?`, female: `Hantu yang takut sama aku, ${n1}!` },
+      { cat: 'hidup', type: 'dialog', male: `Tadi aku mimpi aneh!`, female: `Mimpi menang lawan aku, ${n1}? Haha!` },
+
+      // === KATEGORI 15: Sport / Olahraga (10) ===
+      { cat: 'sport', type: 'dialog', male: `${n2}! Kamu suka sepak bola?`, female: `Suka! Tapi tinju lebih seru, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `Siapa tim favoritmu?`, female: `Tim pemenang, ${n1}! Seperti kita!` },
+      { cat: 'sport', type: 'dialog', male: `${n2}! Kamu pernah nonton UFC?`, female: `Ini UFC versi kita, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `Aku suka lari pagi!`, female: `Lari dari kekalahan, ${n1}? Haha!` },
+      { cat: 'sport', type: 'dialog', male: `${n2}! Badminton atau basket?`, female: `Battle! Itu olahraga terbaik, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `Siapa atlet favoritmu?`, female: `Kamu, ${n1}! Hahaha! Bercanda!` },
+      { cat: 'sport', type: 'dialog', male: `${n2}! Kamu suka renang?`, female: `Renang di lautan kemenangan, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `Olahraga apa yang paling susah?`, female: `Lawan aku, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `${n2}! Kamu pernah ikut kompetisi?`, female: `Ini kompetisi terbaik, ${n1}!` },
+      { cat: 'sport', type: 'dialog', male: `Aku mau push up seribu!`, female: `Push up lawan aku dulu, ${n1}!` },
+
+      // === KATEGORI 16: Teknologi / AI (8) ===
+      { cat: 'tech', type: 'dialog', male: `${n2}! Kamu kenal AI?`, female: `Kenal! AI yang bantu kita bertarung, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `Teknologi makin canggih ya!`, female: `Tapi semangat manusia tetap nomor satu, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `${n2}! Kamu main Mobile Legends?`, female: `Main! Tapi ini lebih seru, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `Aku mau bikin game sendiri!`, female: `Game tentang kita, ${n1}?` },
+      { cat: 'tech', type: 'dialog', male: `${n2}! Kamu punya TikTok?`, female: `Punya! Sekarang lagi live, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `HP-ku baterainya habis!`, female: `Semangatmu jangan habis juga, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `${n2}! Kamu suka edit video?`, female: `Edit video kemenangan, ${n1}!` },
+      { cat: 'tech', type: 'dialog', male: `Aku mau belajar coding!`, female: `Coding jurus baru, ${n1}?` },
+
+      // === KATEGORI 17: Indonesia / Lokal (10) ===
+      { cat: 'lokal', type: 'dialog', male: `${n2}! Kamu dari mana?`, female: `Dari arena pertarungan, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `Makanan favorit apa?`, female: `Nasi goreng pemenang, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `${n2}! Kamu suka rendang?`, female: `Suka! Rendang bikin kuat, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `Aku kangen kampung halaman!`, female: `Kampung halaman kita ya arena ini, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `${n2}! Batik atau songket?`, female: `Kostum pertarungan, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `Lagu Indonesia favorit?`, female: `Lagu semangat juang, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `${n2}! Kamu suka sate?`, female: `Sate enak! Tapi menang lebih enak, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `Aku mau ke Bali!`, female: `Bali bagus! Tapi arena ini lebih bagus, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `${n2}! Bahasa daerahmu apa?`, female: `Bahasa kemenangan, ${n1}!` },
+      { cat: 'lokal', type: 'dialog', male: `Indonesia itu indah ya!`, female: `Paling indah, ${n1}! Seperti pertarungan kita!` },
+
+      // === KATEGORI 18: Tips / Nasihat (10) ===
+      { cat: 'tips', type: 'dialog', male: `${n2}! Tips menang apa?`, female: `Jangan pernah menyerah, ${n1}!` },
+      { cat: 'tips', type: 'dialog', male: `Gimana cara jadi kuat?`, female: `Latihan terus, ${n1}! Seperti kita!` },
+      { cat: 'tips', type: 'dialog', male: `${n2}! Kamu pernah gagal?`, female: `Pernah! Tapi bangkit lagi, ${n1}!` },
+      { cat: 'tips', type: 'dialog', male: `Aku lagi butuh motivasi!`, female: `Kamu sudah di sini, ${n1}! Itu sudah hebat!` },
+      { cat: 'tips', type: 'dialog', male: `${n2}! Gimana ngadapi musuh kuat?`, female: `Fokus dan tenang, ${n1}!` },
+      { cat: 'tips', type: 'dialog', male: `Aku sering kalah!`, female: `Kalah itu belajar, ${n1}! Bangkit terus!` },
+      { cat: 'tips', type: 'dialog', male: `${n2}! Rahasia kemenangan?`, female: `Percaya diri, ${n1}! Seperti kamu sekarang!` },
+      { cat: 'tips', type: 'dialog', male: `Gimana cara fokus?`, female: `Hilangkan ragu, ${n1}! Maju terus!` },
+      { cat: 'tips', type: 'dialog', male: `${n2}! Kamu inspirasiku!`, female: `Kamu juga inspirasiku, ${n1}!` },
+      { cat: 'tips', type: 'dialog', male: `Aku mau jadi lebih baik!`, female: `Setiap hari adalah kesempatan, ${n1}!` },
+
+      // === KATEGORI 19: Hype / Support (10) ===
+      { cat: 'hype', type: 'dialog', male: `${n2}! KITA BISA!`, female: `BISA BANGET, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `SIAPA YANG KUAT?`, female: `KITA YANG KUAT, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `${n2}! SEMANGAT!`, female: `SEMANGAT JUGA, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `AYO MAJU TERUS!`, female: `MAJU TANPA RAGU, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `${n2}! JANGAN TAKUT!`, female: `TIDAK PERNAH TAKUT, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `KITA PETARUNG SEJATI!`, female: `SEJATI, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `${n2}! SHOW TIME!`, female: `LET'S GO, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `SIAPA JUARANYA?`, female: `KITA JUARANYA, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `${n2}! ENERGI PENUH!`, female: `FULL POWER, ${n1}!` },
+      { cat: 'hype', type: 'dialog', male: `TIDAK ADA YANG BISA STOP KITA!`, female: `TIDAK ADA, ${n1}! KITA TAK TERBEKALUKAN!` },
+
+      // === KATEGORI 20: Lucu / Absurd (10) ===
+      { cat: 'absurd', type: 'dialog', male: `${n2}! Aku lupa nama sendiri!`, female: `Nama kamu kalah, ${n1}! Haha!` },
+      { cat: 'absurd', type: 'dialog', male: `Tadi aku ketemu alien!`, female: `Alien juga takut sama kamu, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `${n2}! Kamu bisa terbang?`, female: `Bisa! Terbang tinggi, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `Aku punya kekuatan super!`, female: `Kekuatan super kalah, ${n1}? Haha!` },
+      { cat: 'absurd', type: 'dialog', male: `${n2}! Kamu robot ya?`, female: `Robot pemenang, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `Aku bisa baca pikiran!`, female: `Baca ini: aku menang, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `${n2}! Kamu dari masa depan?`, female: `Dari masa depan yang penuh kemenangan, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `Aku mimpi bisa teleport!`, female: `Teleport ke kemenangan, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `${n2}! Kamu punya jubah super?`, female: `Jubah kemenangan, ${n1}!` },
+      { cat: 'absurd', type: 'dialog', male: `Aku mau jadi superhero!`, female: `Superhero arena, ${n1}!` },
+
+      // === KATEGORI 21: Penonton Interaktif (10) ===
+      { cat: 'interaktif', type: 'narrator', text: `Kalian yang nonton, siapa yang jagoin? Kasih tahu di chat!` },
+      { cat: 'interaktif', type: 'narrator', text: `Yang baru masuk, jangan lupa follow ya! Gratis kok!` },
+      { cat: 'interaktif', type: 'narrator', text: `Chat rame dong! Siapa yang mau lihat jurus baru?` },
+      { cat: 'interaktif', type: 'narrator', text: `Yang sudah follow, kasih like ya! Biar makin semangat!` },
+      { cat: 'interaktif', type: 'narrator', text: `Kalian mau lihat pertarungan lebih seru? Ajak teman!` },
+      { cat: 'interaktif', type: 'narrator', text: `Siapa yang lagi nonton sambil makan? Jangan tersedak ya!` },
+      { cat: 'interaktif', type: 'narrator', text: `Yang belum follow, follow dulu! Nanti nyesel lho!` },
+      { cat: 'interaktif', type: 'narrator', text: `Kalian seru-seru! Terima kasih sudah nonton!` },
+      { cat: 'interaktif', type: 'narrator', text: `Mau lihat pertarungan epik? Stay terus ya!` },
+      { cat: 'interaktif', type: 'narrator', text: `Yang suka battle, share live ini ke teman-teman kalian!` },
+
+      // === KATEGORI 22: Waktu / Jam (4) - context-aware ===
+      { cat: 'jam', type: 'dialog', male: `Aku ngantuk nih!`, female: `Jangan ngantuk, ${n1}! Pertarungan belum selesai!` },
+      { cat: 'jam', type: 'dialog', male: `Waktu berlalu cepat!`, female: `Karena seru, ${n1}!` },
+      { cat: 'jam', type: 'dialog', male: `${n2}! Kita sudah lama bertarung!`, female: `Belum selesai, ${n1}!` },
+      { cat: 'jam', type: 'dialog', male: `${n2}! Istirahat dulu?`, female: `Istirahat setelah menang, ${n1}!` },
+
+      // === KATEGORI 23: Pertanyaan ke Penonton (8) ===
+      { cat: 'tanya', type: 'narrator', text: `Kalian pilih mana: serangan cepat atau pertahanan kuat?` },
+      { cat: 'tanya', type: 'narrator', text: `Siapa yang pernah lihat pertarungan lebih seru dari ini?` },
+      { cat: 'tanya', type: 'narrator', text: `Kalau kalian yang di arena, pilih karakter mana?` },
+      { cat: 'tanya', type: 'narrator', text: `Menurut kalian, siapa yang bakal menang?` },
+      { cat: 'tanya', type: 'narrator', text: `Kalian mau lihat arena apa nanti?` },
+      { cat: 'tanya', type: 'narrator', text: `Siapa yang sudah nonton dari tadi? Setia banget!` },
+      { cat: 'tanya', type: 'narrator', text: `Kalian suka pertarungan tadi?` },
+      { cat: 'tanya', type: 'narrator', text: `Yang baru masuk, dari mana kalian?` },
+    ];
+  }
+
+  speakBanter() {
+    const ctx = this.getContext();
+    const players = ctx.players;
     if (players.length < 2) return;
-    
+
+    // Track start time on first banter
+    if (!this._startTime) this._startTime = Date.now();
+
     // Pilih 2 karakter random
     const p1 = players[Math.floor(Math.random() * players.length)];
     let p2 = players[Math.floor(Math.random() * players.length)];
     while (p2.uniqueId === p1.uniqueId && players.length > 1) {
       p2 = players[Math.floor(Math.random() * players.length)];
     }
-    
-    // Dialog random
-    const dialogues = [
-      // Sapaan
-      { male: `Halo ${p2.nickname}! Siap bertarung?`, female: `Siap ${p1.nickname}! Aku tidak akan kalah!` },
-      { male: `${p2.nickname}! Kamu berani lawan aku?`, female: `Berani dong ${p1.nickname}! Ayo!` },
-      { male: `Wah ${p2.nickname} kelihatan kuat hari ini!`, female: `Terima kasih ${p1.nickname}! Kamu juga!` },
-      // Taunt
-      { male: `${p2.nickname}! Ayo maju! Jangan lari!`, female: `Aku tidak lari ${p1.nickname}! Siap-siap kalah!` },
-      { male: `Siapa yang mau lawan aku?`, female: `Aku ${p1.nickname}! Ayo bertarung!` },
-      { male: `${p2.nickname}! Bersiaplah!`, female: `Aku sudah siap ${p1.nickname}!` },
-      // Obrolan ringan
-      { male: `Cuaca bagus hari ini ya ${p2.nickname}!`, female: `Iya ${p1.nickname}! Cocok buat bertarung!` },
-      { male: `${p2.nickname}! Mau makan apa nanti?`, female: `Mau makan kemenangan ${p1.nickname}!` },
-      { male: `Siapa yang menang ya hari ini?`, female: `Pasti aku ${p1.nickname}!` },
-      { male: `${p2.nickname}! Kamu sudah latihan?`, female: `Sudah ${p1.nickname}! Ayo buktikan!` },
-      // Motivasi
-      { male: `Ayo semangat ${p2.nickname}!`, female: `Semangat ${p1.nickname}! Kita bisa!` },
-      { male: `${p2.nickname}! Jangan menyerah!`, female: `Tidak akan ${p1.nickname}!` },
-      { male: `Siapa yang mau jadi juara?`, female: `Aku ${p1.nickname}! Pasti aku!` },
-      { male: `${p2.nickname}! Ayo tunjukkan kekuatanmu!`, female: `Siap ${p1.nickname}! Lihat ini!` },
-    ];
-    
-    const dialogue = dialogues[this.banterIndex % dialogues.length];
-    this.banterIndex++;
-    
-    // Suara laki-laki bicara dulu
-    this.speak(dialogue.male, this.maleVoice, 0.85, 0.8, () => {
-      // Setelah selesai, suara perempuan jawab
-      setTimeout(() => {
-        this.speak(dialogue.female, this.femaleVoice, 1.0, 1.2);
-      }, 500);
+
+    // Build full dialogue list with context
+    const allDialogues = this.buildDialogues(p1, p2, ctx);
+
+    // Filter: cond !== false, skip same category as last, skip recent history
+    let candidates = allDialogues.filter((d, i) => {
+      if (d.cond === false) return false;
+      if (d.cat === this.lastCategory) return false;
+      if (this.history.includes(i)) return false;
+      return true;
     });
-    
-    // Update last interaction supaya tidak spam
+
+    // If filtered too aggressively, relax: allow same category but still avoid history
+    if (candidates.length < 3) {
+      candidates = allDialogues.filter((d, i) => {
+        if (d.cond === false) return false;
+        if (this.history.includes(i)) return false;
+        return true;
+      });
+    }
+
+    // If still empty, allow anything except history
+    if (candidates.length === 0) {
+      candidates = allDialogues.filter((d, i) => !this.history.includes(i));
+    }
+
+    // If truly exhausted (shouldn't happen with 126 dialogues), reset history
+    if (candidates.length === 0) {
+      this.history = [];
+      candidates = allDialogues;
+    }
+
+    // Pick random candidate
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    const pickIndex = allDialogues.indexOf(pick);
+
+    // Update history
+    this.history.push(pickIndex);
+    if (this.history.length > this.maxHistory) this.history.shift();
+    this.lastCategory = pick.cat;
+    this.banterCount++;
+    this.isSpeaking = true; // Block new banter until this one finishes
+
+    // Safety: force reset isSpeaking kalau ga selesai dalam 15 detik
+    if (this._safetyTimeout) clearTimeout(this._safetyTimeout);
+    this._safetyTimeout = setTimeout(() => {
+      if (this.isSpeaking) {
+        console.warn('[BanterTTS] Safety timeout — force resetting isSpeaking');
+        this.isSpeaking = false;
+      }
+    }, 15000);
+
+    // Speak based on type
+    if (pick.type === 'narrator') {
+      const useMale = Math.random() > 0.5;
+      const pitch = this.sameVoice ? (useMale ? 0.7 : 1.4) : (useMale ? 0.8 : 1.1);
+      const hideBubble = showBanterBubble(p1, pick.text);
+      this.speak(pick.text, this.maleVoice, 0.85, pitch, () => {
+        hideBubble();
+        this.isSpeaking = false;
+        if (this._safetyTimeout) clearTimeout(this._safetyTimeout);
+      });
+    } else {
+      const swap = Math.random() > 0.7;
+      const malePitch = this.sameVoice ? 0.7 : 0.8;
+      const femalePitch = this.sameVoice ? 1.4 : 1.1;
+      if (swap) {
+        const hideBubble2 = showBanterBubble(p2, pick.female);
+        this.speak(pick.female, this.femaleVoice, 1.0, femalePitch, () => {
+          hideBubble2();
+          setTimeout(() => {
+            const hideBubble1 = showBanterBubble(p1, pick.male);
+            this.speak(pick.male, this.maleVoice, 0.85, malePitch, () => {
+              hideBubble1();
+              this.isSpeaking = false;
+              if (this._safetyTimeout) clearTimeout(this._safetyTimeout);
+            });
+          }, 500);
+        });
+      } else {
+        const hideBubble1 = showBanterBubble(p1, pick.male);
+        this.speak(pick.male, this.maleVoice, 0.85, malePitch, () => {
+          hideBubble1();
+          setTimeout(() => {
+            const hideBubble2 = showBanterBubble(p2, pick.female);
+            this.speak(pick.female, this.femaleVoice, 1.0, femalePitch, () => {
+              hideBubble2();
+              this.isSpeaking = false;
+              if (this._safetyTimeout) clearTimeout(this._safetyTimeout);
+            });
+          }, 500);
+        });
+      }
+    }
+
     this.lastInteraction = Date.now();
   }
-  
+
   speak(text, voice, rate, pitch, onEnd) {
-    if (!this.enabled || !this.synth) return;
+    if (!this.enabled || !this.synth) {
+      // Jangan biarkan isSpeaking nyangkut
+      if (onEnd) onEnd();
+      return;
+    }
     const utterance = new SpeechSynthesisUtterance(text);
     if (voice) utterance.voice = voice;
     utterance.lang = voice?.lang || 'id-ID';
     utterance.rate = rate;
     utterance.pitch = pitch;
-    utterance.volume = 0.8; // Lebih pelan dari announcer
+    utterance.volume = 0.8;
     if (onEnd) utterance.onend = onEnd;
+    // Safety: kalau onend ga ke-trigger dalam 10 detik, force selesai
+    utterance.onerror = () => { if (onEnd) onEnd(); };
     this.synth.speak(utterance);
   }
 }
@@ -4773,6 +5228,9 @@ window.handleGift = handleGift;
 window.handleFollow = handleFollow;
 window.handleShare = handleShare;
 window.handleViewerJoin = handleViewerJoin;
+window.testGift = testGift;
+window.spawnBots = spawnBots;
+window.removeBots = removeBots;
 window.socket = null;
 
 // ===== INIT =====
